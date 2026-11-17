@@ -1,6 +1,22 @@
-# 0.2 本機預覽版驗證紀錄
+# 本機預覽版驗證紀錄
 
 驗證日期：2026-11-18（Asia/Taipei）。此紀錄描述本次實際執行結果，不代表已完成公開發行或所有支援 OS 的實機驗收。
+
+## 0.3.0 ARM／Intel 分包
+
+| 項目 | 結果 |
+| --- | --- |
+| ARM 安裝包 | QuickConvert-0.3.0-arm64.dmg，約 393 MiB；App 約 831 MiB |
+| Intel 安裝包 | QuickConvert-0.3.0-x86_64.dmg，約 411 MiB；App 約 843 MiB |
+| 架構隔離 | App、Finder 擴充、CLI、FFmpeg 均檢查為指定架構的 thin binary；每包只有一套對應的官方 Office runtime |
+| ARM 測試 | 17 項單元／整合測試全數通過；使用實際 ARM 安裝包內的引擎 |
+| Intel 測試 | 17 項全數通過；以 Rosetta 啟動 Intel XCTest runner，測試實際 Intel 安裝包的引擎，約 46 秒 |
+| 搬移測試 | ARM 與 Intel／Rosetta 各完成 17 次轉換，只保留系統 PATH，使用 --bundled-only |
+| Cask | 依 ARM／Intel 分別填入 URL 與 SHA-256；以實際 DMG 產生並通過 Ruby 語法檢查，尚未發布 |
+
+CI 已改為 macos-15（ARM）與 macos-15-intel 兩個工作，各自建置、測試並上傳對應 DMG／SHA-256。遠端結果見 [GitHub Actions](https://github.com/SHENGHUNGYU/QuickConvert/actions)。本機 Intel 測試透過既有 Rosetta，不能代替 Intel 實機與 macOS 13 驗收。兩包均為 ad-hoc 本機預覽版，正式簽章／公證仍待擁有者設定。
+
+## 0.2 歷史驗證
 
 | 項目 | 結果 |
 | --- | --- |

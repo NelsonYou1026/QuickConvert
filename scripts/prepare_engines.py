@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a universal audio/WebP FFmpeg and stage official, architecture-specific Office runtimes.
+"""Build architecture-specific audio/WebP FFmpeg and stage matching official Office runtimes.
 
 All downloads are locked by SHA-256. Only developers run this script; the app never downloads tools.
 Build requirements: Xcode command-line tools, Python 3, make and pkg-config (build only).
@@ -79,7 +79,7 @@ def unpack(archive, destination):
     return next(p for p in destination.iterdir() if p.is_dir())
 
 
-def build_ffmpeg(archives):
+def build_ffmpeg(archives, architectures):
     sdk = subprocess.check_output(["xcrun", "--show-sdk-path"], text=True).strip()
     compiler = subprocess.check_output(["xcrun", "--find", "clang"], text=True).strip()
     pkgconfig = shutil.which("pkg-config")
@@ -87,7 +87,7 @@ def build_ffmpeg(archives):
         raise RuntimeError("pkg-config is a developer build dependency (brew install pkgconf)")
     outputs = []
     recipes = {}
-    for arch in ARCHITECTURES:
+    for arch in architectures:
         work = BUILD / arch
         prefix = work / "prefix"
         marker = work / "source-lock.sha256"
@@ -141,18 +141,19 @@ def build_ffmpeg(archives):
         (work / "recipe.json").write_text(json.dumps(recipes[arch], indent=2))
         marker.write_text(lock_hash)
         outputs.append(binary)
-    binary = OUTPUT / "bin/ffmpeg"
-    binary.parent.mkdir(parents=True, exist_ok=True)
-    run(["lipo", "-create", *outputs, "-output", binary])
-    run(["lipo", binary, "-verify_arch", *ARCHITECTURES])
-    run(["codesign", "--force", "--sign", "-", binary])
+    for arch, compiled in zip(architectures, outputs):
+        binary = OUTPUT / "bin" / arch / "ffmpeg"
+        binary.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(compiled, binary)
+        run(["lipo", binary, "-verify_arch", arch])
+        run(["codesign", "--force", "--sign", "-", binary])
     sources = OUTPUT / "Sources"
     licenses = OUTPUT / "Licenses"
     sources.mkdir(parents=True, exist_ok=True)
     licenses.mkdir(parents=True, exist_ok=True)
     for name, archive in archives.items():
         shutil.copy2(archive, sources / archive.name)
-        source = next(p for p in (BUILD / "arm64" / name).iterdir() if p.is_dir())
+        source = next(p for p in (BUILD / architectures[0] / name).iterdir() if p.is_dir())
         license_name = {"ffmpeg": "COPYING.LGPLv2.1", "lame": "COPYING", "webp": "COPYING"}[name]
         shutil.copy2(source / license_name, licenses / f"{name}-LICENSE.txt")
         if name == "webp":
@@ -197,16 +198,18 @@ def stage_office(arch, image):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--media-only", action="store_true", help="Build audio/WebP engines without Office runtimes")
+    parser.add_argument("--architecture", choices=(*ARCHITECTURES, "all"), default="all")
     args = parser.parse_args()
+    architectures = ARCHITECTURES if args.architecture == "all" else (args.architecture,)
     entries = list(LOCK["sources"].items())
     if not args.media_only:
-        entries += [("office-" + arch, LOCK["office"][arch]) for arch in ARCHITECTURES]
+        entries += [("office-" + arch, LOCK["office"][arch]) for arch in architectures]
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
         futures = {name: pool.submit(download, entry) for name, entry in entries}
         archives = {name: future.result() for name, future in futures.items()}
-    build_ffmpeg({name: archives[name] for name in LOCK["sources"]})
+    build_ffmpeg({name: archives[name] for name in LOCK["sources"]}, architectures)
     if not args.media_only:
-        for arch in ARCHITECTURES:
+        for arch in architectures:
             stage_office(arch, archives["office-" + arch])
     shutil.copy2(LOCK_PATH, OUTPUT / "engines.lock.json")
     print(f"Engines ready: {OUTPUT}", flush=True)

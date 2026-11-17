@@ -1,8 +1,15 @@
 # QuickConvert for macOS
 
-在 Finder 右鍵選單中轉換圖片、音訊與文件。SwiftUI 原生介面，macOS 13 以上，Apple Silicon／Intel 通用執行檔。所有轉檔都在本機完成。
+在 Finder 右鍵選單中轉換圖片、音訊與文件。SwiftUI 原生介面，macOS 13 以上，提供 Apple Silicon 與 Intel 獨立安裝包。所有轉檔都在本機完成。
 
-**0.2 完整安裝包自帶轉檔引擎**：使用者無須 Homebrew、配置 PATH、安裝 FFmpeg、LibreOffice、Python 或 Rust。首次啟動不會下載引擎。公開 repo：[SHENGHUNGYU/QuickConvert](https://github.com/SHENGHUNGYU/QuickConvert)；正式公證 Release 尚未發布。
+**0.3.0 分架構完整安裝包自帶轉檔引擎**：使用者無須 Homebrew、配置 PATH、安裝 FFmpeg、LibreOffice、Python 或 Rust。首次啟動不會下載引擎。公開 repo：[SHENGHUNGYU/QuickConvert](https://github.com/SHENGHUNGYU/QuickConvert)；正式公證 Release 尚未發布。
+
+| 電腦 | 安裝包 |
+| --- | --- |
+| Apple Silicon（M 系列） | `QuickConvert-0.3.0-arm64.dmg` |
+| Intel Mac | `QuickConvert-0.3.0-x86_64.dmg` |
+
+每包只含對應架構的 App、Finder 擴充、CLI、FFmpeg 與一套 LibreOffice，避免下載另一個 CPU 的 runtime。
 
 ## 快速開始
 
@@ -11,11 +18,13 @@
 ```sh
 swift test
 bash scripts/build.sh # 輕量開發版本，使用本機工具
-open build/Build/Products/Release/QuickConvert.app
+open "build/$(uname -m)/Build/Products/Release/QuickConvert.app"
 
 # 完整免配置安裝包：另需 Python 3、make、pkg-config 等開發工具
 bash scripts/package.sh
-# dist/QuickConvert-0.2.0-universal.dmg
+# dist/QuickConvert-0.3.0-arm64.dmg
+# dist/QuickConvert-0.3.0-x86_64.dmg
+# 也可只做其中一包：bash scripts/package.sh arm64
 ```
 
 也可直接開啟 `QuickConvert.xcodeproj`，選擇 QuickConvert scheme。`python3 scripts/generate_project.py` 可重建專案；新增來源檔案後請執行此指令。專案沒有第三方 Xcode 專案產生器依賴。
@@ -24,7 +33,7 @@ bash scripts/package.sh
 
 主程式支援選取／拖放多個檔案、選擇目標格式、查看每個結果、取消與在 Finder 顯示輸出。Finder 入口會在背景喚起主程式，依序處理工作，不在 Finder 程序中執行轉檔。
 
-第一次完整建置會下載約 600 MB 官方來源／套件，編譯 ARM／Intel C 引擎，再內嵌兩個架構的 Office runtime。完整 App 約 1.6 GB。後續使用 `build/`、`vendor/` 快取；這些是開發階段的下載，使用者執行 App 不需要下載。詳見 [內附引擎設計](docs/BUNDLED-ENGINES.md)。
+第一次建置單一架構會下載約 300 MB 官方來源／套件，編譯對應 C 引擎，並內嵌一套 Office runtime。建置另一架構時才下載另一套；後續使用 `build/`、`vendor/` 快取。這些是開發階段的下載，使用者執行 App 不需要下載。`QUICKCONVERT_ARCH=arm64` 或 `x86_64` 可指定 build.sh 的架構，未指定時使用本機架構。詳見 [內附引擎設計](docs/BUNDLED-ENGINES.md)。
 
 ## 支援格式
 
@@ -84,9 +93,10 @@ CLI 使用相同引擎；`--bundled-only` 禁止退回系統工具。回傳碼�
 `swift test` 涵蓋格式過濾、URL 驗證、設定儲存、並行發布衝突、原檔保留、PDF 分頁、實際音訊／圖片／Office 轉換、錯誤清理、逾時／取消／網路封鎖、批次失敗隔離及選單計算時間。另測內附工具優先序、架構選擇、越界符號連結與禁止退回系統工具。開發環境缺少引擎時會明確跳過整合測試；完整版本必須使用實際內附引擎驗證：
 
 ```sh
-QUICKCONVERT_TEST_BUNDLE="$PWD/build/Build/Products/Release/QuickConvert.app" swift test
-python3 scripts/verify_bundle.py build/Build/Products/Release/QuickConvert.app
-python3 scripts/smoke_bundle.py build/Build/Products/Release/QuickConvert.app
+QUICKCONVERT_TEST_BUNDLE="$PWD/build/arm64/Build/Products/Release/QuickConvert.app" swift test --arch arm64
+python3 scripts/verify_bundle.py build/arm64/Build/Products/Release/QuickConvert.app --architecture arm64
+python3 scripts/smoke_bundle.py build/arm64/Build/Products/Release/QuickConvert.app
+# 原生 Intel 機將 arm64 改為 x86_64；Apple Silicon 上的 Intel XCTest 指令見內附引擎文件。
 ```
 
 LibreOffice 實際文件矩陣、具有效簽章的 Finder 選單／App Group、通知授權，以及 macOS 13 和 Intel 實機驗收，請依 [人工驗收清單](docs/ACCEPTANCE.md) 完成。編譯成 Intel 執行檔不等同 Intel 實機已測試。0.5 秒的選單計算會測量；包含系統啟動與冷啟動的時間仍需實機記錄。
@@ -102,7 +112,7 @@ Sources/QuickConvertCore/    格式、外部工具、原生引擎、批次與輸
 Sources/QuickConvertCLI/     獨立命令列入口
 Tests/                       核心與引擎整合測試
 Configuration/               Info.plist、沙盒與 App Group
-scripts/                     Xcode 專案產生、universal 建置與 DMG
+scripts/                     Xcode 專案產生、ARM／Intel 獨立建置與 DMG
 distribution/                Homebrew Cask 範本產生器
 docs/                        發布與驗收說明
 ```

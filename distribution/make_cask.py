@@ -7,7 +7,8 @@ from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--version", required=True)
-parser.add_argument("--dmg", type=Path, required=True)
+parser.add_argument("--arm64-dmg", type=Path, required=True)
+parser.add_argument("--x86_64-dmg", type=Path, required=True)
 parser.add_argument("--repository", required=True)
 parser.add_argument("--output", type=Path, required=True)
 args = parser.parse_args()
@@ -16,15 +17,25 @@ if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.]+)?", args.version):
 repository = args.repository.rstrip("/")
 if not re.fullmatch(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
     parser.error("repository must be an HTTPS GitHub repository URL")
-if not args.dmg.is_file():
-    parser.error("DMG does not exist")
-checksum = hashlib.sha256(args.dmg.read_bytes()).hexdigest()
+checksums = {}
+for architecture, dmg in [("arm64", args.arm64_dmg), ("x86_64", args.x86_64_dmg)]:
+    if not dmg.is_file():
+        parser.error(f"{architecture} DMG does not exist")
+    if dmg.name != f"QuickConvert-{args.version}-{architecture}.dmg":
+        parser.error(f"Unexpected {architecture} DMG filename: {dmg.name}")
+    with dmg.open("rb") as stream:
+        digest = hashlib.sha256()
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    checksums[architecture] = digest.hexdigest()
 args.output.parent.mkdir(parents=True, exist_ok=True)
 args.output.write_text(f'''cask "quickconvert" do
   version "{args.version}"
-  sha256 "{checksum}"
+  arch arm: "arm64", intel: "x86_64"
+  sha256 arm: "{checksums['arm64']}",
+         intel: "{checksums['x86_64']}"
 
-  url "{repository}/releases/download/v#{{version}}/QuickConvert-#{{version}}-universal.dmg"
+  url "{repository}/releases/download/v#{{version}}/QuickConvert-#{{version}}-#{{arch}}.dmg"
   name "QuickConvert"
   desc "Offline file conversion from the macOS Finder"
   homepage "{repository}"

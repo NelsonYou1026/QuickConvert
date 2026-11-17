@@ -20,19 +20,28 @@ def run(arguments, **kwargs):
     return subprocess.check_output([str(value) for value in arguments], text=True, stderr=subprocess.STDOUT, **kwargs)
 
 
-def verify(app):
+def verify(app, architecture=None):
     app = app.resolve()
     helpers = app / "Contents/Helpers"
-    for name in ("ffmpeg", "quickconvert"):
-        binary = helpers / name
+    resources = app / "Contents/Resources"
+    manifest = json.loads((resources / "runtime-manifest.json").read_text())
+    declared = manifest["architecture"]
+    if declared not in ("arm64", "x86_64") or (architecture is not None and declared != architecture):
+        raise RuntimeError(f"Runtime architecture mismatch: {declared} (expected {architecture})")
+    architecture = declared
+    for binary in (helpers / "ffmpeg", helpers / "quickconvert", app / "Contents/MacOS/QuickConvert",
+                   app / "Contents/PlugIns/QuickConvertFinder.appex/Contents/MacOS/QuickConvertFinder"):
         if not binary.is_file() or not os.access(binary, os.X_OK):
             raise RuntimeError(f"Missing executable: {binary}")
-        run(["lipo", binary, "-verify_arch", "arm64", "x86_64"])
-    for arch in ("arm64", "x86_64"):
+        if run(["lipo", "-archs", binary]).strip().split() != [architecture]:
+            raise RuntimeError(f"Expected a thin {architecture} executable: {binary}")
+    expected_office = f"LibreOffice-{architecture}.app"
+    if sorted(path.name for path in helpers.glob("LibreOffice-*.app")) != [expected_office]:
+        raise RuntimeError("Package must contain exactly one matching Office runtime")
+    for arch in (architecture,):
         office = helpers / f"LibreOffice-{arch}.app"
         run(["lipo", office / "Contents/MacOS/soffice", "-verify_arch", arch])
         run(["codesign", "--verify", "--deep", "--strict", office])
-    resources = app / "Contents/Resources"
     lock = json.loads((resources / "engines.lock.json").read_text())
     for entry in lock["sources"].values():
         archive = resources / "ThirdPartySources" / Path(entry["url"]).name
@@ -120,4 +129,6 @@ def verify(app):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("app", type=Path)
-    verify(parser.parse_args().app)
+    parser.add_argument("--architecture", choices=("arm64", "x86_64"))
+    args = parser.parse_args()
+    verify(args.app, args.architecture)

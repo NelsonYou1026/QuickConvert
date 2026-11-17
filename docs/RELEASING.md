@@ -11,7 +11,7 @@
 DEVELOPMENT_TEAM=YOURTEAMID bash scripts/build.sh
 ```
 
-沒有團隊時 `bash scripts/build.sh` 建置 universal app 後進行 ad-hoc 簽章，只供本機主程式預覽。此模式不帶正式群組權限，也不能保證 Finder 擴充可啟用或共享設定。不要把這個版本宣稱為正式安裝包。
+沒有團隊時 `bash scripts/build.sh` 建置本機架構 App 後進行 ad-hoc 簽章，只供本機主程式預覽。可用 QUICKCONVERT_ARCH=arm64 或 x86_64 指定架構。此模式不帶正式群組權限，也不能保證 Finder 擴充可啟用或共享設定。
 
 若 Xcode 出現 DVTDownloads／IDESimulatorFoundation 元件載入錯誤，可先執行 `xcodebuild -runFirstLaunch` 完成 Xcode 元件安裝，再重試。若仍失敗，需修復本機 Xcode；不應修改專案來掩蓋工具鏈問題。
 
@@ -19,10 +19,12 @@ DEVELOPMENT_TEAM=YOURTEAMID bash scripts/build.sh
 
 ```sh
 bash scripts/package.sh
-# dist/QuickConvert-0.2.0-universal.dmg
+# dist/QuickConvert-0.3.0-arm64.dmg
+# dist/QuickConvert-0.3.0-x86_64.dmg
+# 只打包一個架構：bash scripts/package.sh arm64
 ```
 
-產物含完整 App、Applications 捷徑、README 與 MIT License。App 內附 universal FFmpeg／CLI、ARM／Intel LibreOffice、第三方授權與 FFmpeg／LAME／libwebp 對應原始碼。使用者無須配置環境；開發建置需要 Python 3、make、pkg-config。未設定 DEVELOPMENT_TEAM 時，此 DMG 只供本機預覽。細節見 [內附引擎](BUNDLED-ENGINES.md)。
+每個產物含完整 App、Applications 捷徑、README 與 MIT License。App、Finder、FFmpeg、CLI 都是對應架構的 thin binary，只附一套 LibreOffice、第三方授權與 FFmpeg／LAME／libwebp 對應原始碼。使用者無須配置環境；開發建置需要 Python 3、make、pkg-config。未設定 DEVELOPMENT_TEAM 時只供本機預覽。細節見 [內附引擎](BUNDLED-ENGINES.md)。
 
 ## 公開發布
 
@@ -33,18 +35,21 @@ bash scripts/package.sh
 3. 使用 Keychain 中已設定的 notarytool profile：
 
    ```sh
-   xcrun notarytool submit dist/QuickConvert-0.2.0-universal.dmg --keychain-profile YOUR_PROFILE --wait
-   xcrun stapler staple dist/QuickConvert-0.2.0-universal.dmg
-   xcrun stapler validate dist/QuickConvert-0.2.0-universal.dmg
-   spctl --assess --type open --context context:primary-signature --verbose dist/QuickConvert-0.2.0-universal.dmg
+   for arch in arm64 x86_64; do
+     xcrun notarytool submit "dist/QuickConvert-0.3.0-$arch.dmg" --keychain-profile YOUR_PROFILE --wait
+     xcrun stapler staple "dist/QuickConvert-0.3.0-$arch.dmg"
+     xcrun stapler validate "dist/QuickConvert-0.3.0-$arch.dmg"
+     spctl --assess --type open --context context:primary-signature --verbose "dist/QuickConvert-0.3.0-$arch.dmg"
+   done
    ```
 
 4. 完成 docs/ACCEPTANCE.md 的正式簽章與實機項目，建立版本 tag 與 GitHub Release，附上 notarized DMG、SHA-256、已知限制與安裝說明。
 5. 用真實 release URL 與最終 DMG 產生 Cask：
 
    ```sh
-   python3 distribution/make_cask.py --version 0.2.0 \
-     --dmg dist/QuickConvert-0.2.0-universal.dmg \
+   python3 distribution/make_cask.py --version 0.3.0 \
+     --arm64-dmg dist/QuickConvert-0.3.0-arm64.dmg \
+     --x86_64-dmg dist/QuickConvert-0.3.0-x86_64.dmg \
      --repository https://github.com/SHENGHUNGYU/QuickConvert \
      --output dist/quickconvert.rb
    ```
