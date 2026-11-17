@@ -1,0 +1,25 @@
+name: Build and test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install conversion test tools
+        run: |
+          brew install ffmpeg webp
+          brew install --cask libreoffice
+      - name: Core and conversion tests
+        run: swift test
+      - name: Build universal application and DMG
+        run: bash scripts/package.sh
+      - name: Verify universal architectures
+        run: |
+          lipo build/Build/Products/Release/QuickConvert.app/Contents/MacOS/QuickConvert -verify_arch arm64 x86_64
+          lipo build/Build/Products/Release/QuickConvert.app/Contents/PlugIns/QuickConvertFinder.appex/Contents/MacOS/QuickConvertFinder -verify_arch arm64 x86_64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QuickConvert-local-preview
+          path: dist/*.dmg
