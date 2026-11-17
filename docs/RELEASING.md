@@ -19,33 +19,33 @@ DEVELOPMENT_TEAM=YOURTEAMID bash scripts/build.sh
 
 ```sh
 bash scripts/package.sh
-# dist/QuickConvert-0.1.0-universal.dmg
+# dist/QuickConvert-0.2.0-universal.dmg
 ```
 
-產物含 app、Applications 捷徑、README 與 MIT License，不含外部引擎。未設定 DEVELOPMENT_TEAM 時，此 DMG 同樣只供本機預覽。
+產物含完整 App、Applications 捷徑、README 與 MIT License。App 內附 universal FFmpeg／CLI、ARM／Intel LibreOffice、第三方授權與 FFmpeg／LAME／libwebp 對應原始碼。使用者無須配置環境；開發建置需要 Python 3、make、pkg-config。未設定 DEVELOPMENT_TEAM 時，此 DMG 只供本機預覽。細節見 [內附引擎](BUNDLED-ENGINES.md)。
 
 ## 公開發布
 
-公開發布需要專案擁有者的 GitHub repository、Apple Developer ID 憑證與 notarization 憑證；本專案不包含這些資料，也不會自行建立遠端倉庫或提交帳號資料。
+原始碼已位於公開倉庫 https://github.com/SHENGHUNGYU/QuickConvert 。公開安裝包仍需要擁有者的 Apple Developer ID 與 notarization 憑證；本專案不包含這些帳號資料。
 
 1. 將 bundle ID 調整為擁有者管理的識別碼，完成同團隊 App Group 與 Developer ID 設定。
 2. 在 Release 設定選擇 `Developer ID Application` 憑證，保留 hardened runtime。依由內至外順序驗證 extension 與 app 的簽章；以 Developer ID 簽章建置 DMG，驗證 `codesign --verify --deep --strict`。
 3. 使用 Keychain 中已設定的 notarytool profile：
 
    ```sh
-   xcrun notarytool submit dist/QuickConvert-0.1.0-universal.dmg --keychain-profile YOUR_PROFILE --wait
-   xcrun stapler staple dist/QuickConvert-0.1.0-universal.dmg
-   xcrun stapler validate dist/QuickConvert-0.1.0-universal.dmg
-   spctl --assess --type open --context context:primary-signature --verbose dist/QuickConvert-0.1.0-universal.dmg
+   xcrun notarytool submit dist/QuickConvert-0.2.0-universal.dmg --keychain-profile YOUR_PROFILE --wait
+   xcrun stapler staple dist/QuickConvert-0.2.0-universal.dmg
+   xcrun stapler validate dist/QuickConvert-0.2.0-universal.dmg
+   spctl --assess --type open --context context:primary-signature --verbose dist/QuickConvert-0.2.0-universal.dmg
    ```
 
 4. 完成 docs/ACCEPTANCE.md 的正式簽章與實機項目，建立版本 tag 與 GitHub Release，附上 notarized DMG、SHA-256、已知限制與安裝說明。
 5. 用真實 release URL 與最終 DMG 產生 Cask：
 
    ```sh
-   python3 distribution/make_cask.py --version 0.1.0 \
-     --dmg dist/QuickConvert-0.1.0-universal.dmg \
-     --repository https://github.com/OWNER/QuickConvert \
+   python3 distribution/make_cask.py --version 0.2.0 \
+     --dmg dist/QuickConvert-0.2.0-universal.dmg \
+     --repository https://github.com/SHENGHUNGYU/QuickConvert \
      --output dist/quickconvert.rb
    ```
 

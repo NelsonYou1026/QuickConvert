@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-bash scripts/build.sh
+QUICKCONVERT_BUNDLE_ENGINES=1 bash scripts/build.sh
 app="build/Build/Products/Release/QuickConvert.app"
 mkdir -p dist
 stage=$(mktemp -d "${TMPDIR:-/tmp}/quickconvert-dmg.XXXXXX")

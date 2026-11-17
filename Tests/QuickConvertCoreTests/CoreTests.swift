@@ -143,7 +143,7 @@ final class CoreTests: XCTestCase {
     }
 
     func testFFmpegAudioMatrixAndWebPIntegration() throws {
-        let tools = Dependencies.discover()
+        let tools = integrationDependencies()
         guard tools.ffmpeg != nil else { throw XCTSkip("FFmpeg not installed") }
         let engine = ConversionEngine(dependencies: tools)
         let wav = folder.appendingPathComponent("tone.wav")
@@ -181,7 +181,7 @@ final class CoreTests: XCTestCase {
     }
 
     func testLibreOfficeDocumentMatrixIntegration() throws {
-        let tools = Dependencies.discover()
+        let tools = integrationDependencies()
         guard tools.libreOffice != nil else { throw XCTSkip("LibreOffice not installed") }
         let engine = ConversionEngine(dependencies: tools)
         for (name, pages) in [("document.docx", 2), ("workbook.xlsx", 2), ("presentation.pptx", 2), ("page.html", 1)] {
@@ -200,6 +200,60 @@ final class CoreTests: XCTestCase {
         let start = Date()
         for _ in 0..<100 { _ = FormatPolicy.targets(for: files, enabled: Set(OutputFormat.allCases)) }
         XCTAssertLessThan(Date().timeIntervalSince(start) / 100, 0.5)
+    }
+
+    func testBundledToolsWinOverExternalTools() throws {
+        let app = folder.appendingPathComponent("Quick Convert 中文.app")
+        let ffmpeg = try fakeExecutable(app.appendingPathComponent("Contents/Helpers/ffmpeg"))
+        let office = try fakeExecutable(app.appendingPathComponent("Contents/Helpers/LibreOffice-arm64.app/Contents/MacOS/soffice"))
+        let external = folder.appendingPathComponent("external")
+        for name in ["ffmpeg", "soffice", "cwebp"] { _ = try fakeExecutable(external.appendingPathComponent(name)) }
+        let tools = Dependencies.discover(environment: ["PATH": external.path], bundleURL: app, architecture: "arm64")
+        XCTAssertEqual(tools.ffmpeg, ffmpeg)
+        XCTAssertEqual(tools.libreOffice, office)
+        XCTAssertNil(tools.cwebp, "Use bundled FFmpeg for WebP instead of external cwebp")
+        XCTAssertTrue(tools.isSelfContained)
+    }
+
+    func testBundledOnlyNeverFallsBackAndSelectsProcessArchitecture() throws {
+        let app = folder.appendingPathComponent("QuickConvert.app")
+        let office = try fakeExecutable(app.appendingPathComponent("Contents/Helpers/LibreOffice-x86_64.app/Contents/MacOS/soffice"))
+        let external = folder.appendingPathComponent("external")
+        _ = try fakeExecutable(external.appendingPathComponent("ffmpeg"))
+        _ = try fakeExecutable(external.appendingPathComponent("soffice"))
+        let arm = Dependencies.discover(environment: ["PATH": external.path], bundleURL: app,
+                                        architecture: "arm64", policy: .bundledOnly)
+        XCTAssertNil(arm.ffmpeg)
+        XCTAssertNil(arm.libreOffice)
+        XCTAssertFalse(arm.isSelfContained)
+        let intel = Dependencies.discover(environment: [:], bundleURL: app, architecture: "x86_64", policy: .bundledOnly)
+        XCTAssertEqual(intel.libreOffice, office)
+    }
+
+    func testBundledExecutableCannotBeAnEscapingSymlinkOrDirectory() throws {
+        let app = folder.appendingPathComponent("QuickConvert.app")
+        let helper = app.appendingPathComponent("Contents/Helpers/ffmpeg")
+        let external = try fakeExecutable(folder.appendingPathComponent("outside"))
+        try FileManager.default.createDirectory(at: helper.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: helper, withDestinationURL: external)
+        XCTAssertNil(Dependencies.discover(environment: [:], bundleURL: app, policy: .bundledOnly).ffmpeg)
+        try FileManager.default.removeItem(at: helper)
+        try FileManager.default.createDirectory(at: helper, withIntermediateDirectories: false)
+        XCTAssertNil(Dependencies.discover(environment: [:], bundleURL: app, policy: .bundledOnly).ffmpeg)
+    }
+
+    private func fakeExecutable(_ path: URL) throws -> URL {
+        try FileManager.default.createDirectory(at: path.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("fixture".utf8).write(to: path)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: path.path)
+        return path
+    }
+
+    private func integrationDependencies() -> Dependencies {
+        if let app = ProcessInfo.processInfo.environment["QUICKCONVERT_TEST_BUNDLE"] {
+            return Dependencies.discover(environment: [:], bundleURL: URL(fileURLWithPath: app), policy: .bundledOnly)
+        }
+        return .discover()
     }
 
     private func makePNG() throws -> URL {

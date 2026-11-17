@@ -5,7 +5,7 @@ public struct ProcessRunner: Sendable {
     public var timeout: TimeInterval = 600
     public init(timeout: TimeInterval = 600) { self.timeout = timeout }
 
-    /// File-backed diagnostics avoid pipe-buffer deadlocks. Child processes inherit the network denial.
+    /// File-backed diagnostics avoid pipe-buffer deadlocks. IP networking is denied in all child processes.
     public func run(_ executable: URL, arguments: [String], directory: URL,
                     cancelled: @Sendable () -> Bool = { false }) throws {
         if cancelled() { throw ConversionError.cancelled }
@@ -15,7 +15,10 @@ public struct ProcessRunner: Sendable {
         defer { try? handle.close(); try? FileManager.default.removeItem(at: log) }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/sandbox-exec")
-        process.arguments = ["-p", "(version 1)(allow default)(deny network*)", executable.path] + arguments
+        // LibreOffice requires local Unix sockets for its isolated-instance IPC. Internet/loopback IP
+        // connections remain denied; allowing only Unix sockets does not allow TCP or UDP traffic.
+        let profile = "(version 1)(allow default)(deny network*)(allow network* (local unix-socket) (remote unix-socket))"
+        process.arguments = ["-p", profile, executable.path] + arguments
         process.currentDirectoryURL = directory
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = handle
@@ -43,7 +46,9 @@ public struct ProcessRunner: Sendable {
             let size = try reader.seekToEnd()
             try reader.seek(toOffset: size > 8192 ? size - 8192 : 0)
             let data = try reader.readToEnd() ?? Data()
-            throw ConversionError.processFailed(String(decoding: data, as: UTF8.self))
+            let diagnostic = String(decoding: data, as: UTF8.self)
+            let reason = process.terminationReason == .uncaughtSignal ? "signal" : "exit"
+            throw ConversionError.processFailed(diagnostic.isEmpty ? "\(executable.lastPathComponent): \(reason) \(process.terminationStatus)" : diagnostic)
         }
     }
 }

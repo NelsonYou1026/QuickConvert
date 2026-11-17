@@ -35,8 +35,7 @@ args.output.write_text(f'''cask "quickconvert" do
 
   caveats <<~EOS
     Enable QuickConvert Finder in System Settings to use the context menu.
-    Audio conversion requires FFmpeg; Office/HTML PDFs require LibreOffice.
-    WebP output requires cwebp or FFmpeg with libwebp.
+    Conversion engines are included; no separate FFmpeg or LibreOffice installation is required.
   EOS
 end
 ''')

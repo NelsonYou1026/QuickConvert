@@ -4,17 +4,24 @@ permissions:
   contents: read
 jobs:
   macos:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Install conversion test tools
-        run: |
-          brew install ffmpeg webp
-          brew install --cask libreoffice
-      - name: Core and conversion tests
-        run: swift test
-      - name: Build universal application and DMG
+      - name: Install developer build tools
+        run: brew install pkgconf
+      - uses: actions/cache@v4
+        with:
+          path: |
+            build/engine-downloads
+            build/engines
+            vendor/engines
+          key: conversion-engines-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('distribution/engines.lock.json', 'scripts/prepare_engines.py') }}
+      - name: Build self-contained universal application and DMG
         run: bash scripts/package.sh
+      - name: Core and bundled conversion tests
+        run: QUICKCONVERT_TEST_BUNDLE="$PWD/build/Build/Products/Release/QuickConvert.app" swift test
+      - name: Relocated app with system-only PATH
+        run: python3 scripts/smoke_bundle.py build/Build/Products/Release/QuickConvert.app
       - name: Verify universal architectures
         run: |
           lipo build/Build/Products/Release/QuickConvert.app/Contents/MacOS/QuickConvert -verify_arch arm64 x86_64
@@ -23,3 +30,4 @@ jobs:
         with:
           name: QuickConvert-local-preview
           path: dist/*.dmg
+          compression-level: 0

@@ -29,6 +29,8 @@ final class AppModel: ObservableObject {
         let found = await Task.detached { Dependencies.discover() }.value
         var resolved = found
         for key in ["ffmpeg", "libreOffice", "cwebp"] {
+            let current = key == "ffmpeg" ? found.ffmpeg : (key == "libreOffice" ? found.libreOffice : found.cwebp)
+            if found.isBundled(current) || (key == "cwebp" && found.isBundled(found.ffmpeg)) { continue }
             if let path = UserDefaults.standard.string(forKey: "tool.\(key)"),
                FileManager.default.isExecutableFile(atPath: path) {
                 if key == "ffmpeg" { resolved.ffmpeg = URL(fileURLWithPath: path) }
