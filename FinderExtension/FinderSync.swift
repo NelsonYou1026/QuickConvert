@@ -23,8 +23,7 @@ final class FinderSync: FIFinderSync {
         for target in targets {
             let item = NSMenuItem(title: "轉換為 \(target.title)", action: #selector(convert(_:)), keyEquivalent: "")
             item.target = self
-            // Snapshot selection while Finder guarantees selectedItemURLs is valid.
-            item.representedObject = try? ConversionRequest(files: urls, target: target).url
+            item.tag = target.finderMenuTag
             submenu.addItem(item)
         }
         parent.submenu = submenu
@@ -33,10 +32,28 @@ final class FinderSync: FIFinderSync {
     }
 
     @objc private func convert(_ sender: NSMenuItem) {
-        guard let url = sender.representedObject as? URL else { return }
+        guard let target = OutputFormat(finderMenuTag: sender.tag),
+              let files = FIFinderSyncController.default().selectedItemURLs() else {
+            NSLog("QuickConvert Finder action has no valid format or selection (tag=%ld)", sender.tag)
+            return
+        }
+        let request: ConversionRequest
+        do { request = try ConversionRequest(files: files, target: target) }
+        catch {
+            NSLog("QuickConvert Finder selection rejected: %@", error.localizedDescription)
+            return
+        }
+        // Always launch this extension's containing app, rather than another installed/dev copy
+        // that happens to own the global quickconvert: scheme association.
+        let host = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        guard host.pathExtension == "app" else {
+            NSLog("QuickConvert Finder cannot locate its containing app")
+            return
+        }
+        NSLog("QuickConvert Finder submitting %ld file(s) to %@", files.count, target.title)
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = false
-        NSWorkspace.shared.open(url, configuration: configuration) { _, error in
+        NSWorkspace.shared.open([request.url], withApplicationAt: host, configuration: configuration) { _, error in
             if let error { NSLog("QuickConvert host launch failed: %@", error.localizedDescription) }
         }
     }

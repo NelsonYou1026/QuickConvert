@@ -25,6 +25,18 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(FormatPolicy.targets(for: [URL(string: "https://example.com/a.png")!], enabled: all), [])
     }
 
+    func testFinderMenuSurvivesReconstructedItemsWithoutRepresentedObjects() throws {
+        for format in OutputFormat.allCases {
+            let reconstructed = NSMenuItem(title: format.title, action: nil, keyEquivalent: "")
+            reconstructed.tag = format.finderMenuTag
+            XCTAssertNil(reconstructed.representedObject)
+            XCTAssertEqual(OutputFormat(finderMenuTag: reconstructed.tag), format)
+        }
+        for invalid in [Int.min, -1, 0, OutputFormat.allCases.count + 1, Int.max] {
+            XCTAssertNil(OutputFormat(finderMenuTag: invalid))
+        }
+    }
+
     func testRequestRoundTripWithSpecialCharactersAndRejectsMalformedURLs() throws {
         let files = [folder.appendingPathComponent("中文 # & ? % +.png"), folder.appendingPathComponent("line\nbreak.png")]
         let request = try ConversionRequest(files: files, target: .pdf)

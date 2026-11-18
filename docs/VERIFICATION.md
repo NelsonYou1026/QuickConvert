@@ -2,6 +2,16 @@
 
 驗證日期：2026-11-18（Asia/Taipei）。此紀錄描述本次實際執行結果，不代表已完成公開發行或所有支援 OS 的實機驗收。
 
+## 0.3.2 Finder 點擊到產檔
+
+- 修正選單動作跨程序後讀不到 representedObject 而提前返回的派送方式：選單只傳整數格式 tag，在 Finder 保證有效的 action callback 重新取得 selectedItemURLs 並驗證請求。
+- 明確開啟此擴充所在的 App，避免多份開發／安裝副本競爭 quickconvert URL scheme；主程式在 AppDelegate 接收 URL，涵蓋冷啟動或沒有可見視窗時的工作。移除重複的 view-level URL 處理。
+- 實際從 Finder 對合成測試文件執行「QuickConvert → 轉換為 PDF」：冷啟動產生 menu-test.pdf，主程式已運行時再產生中文名稱 DOCX 的 PDF。沒有使用 CLI 代替選單點擊；沒有轉換或公開使用者的私人文件。
+- 由 Finder 視窗與檔案系統同時確認輸出存在，再以 PDFKit 驗證 TXT PDF 1 頁、DOCX PDF 2 頁，內容可搜尋到 QuickConvert。輸出各出現一次，沒有因重複 URL handler 產生額外流水號檔案。
+- 換上最終修正版後，另在 Downloads 的獨立測試資料夾以 Finder 右鍵轉換合成 DOCX，主程式顯示「完成 1 個，失敗 0 個」，Finder 中確實新增 PDF；未更動使用者原本的文件。
+- 回歸測試模擬 Finder 重建的 NSMenuItem 不含 representedObject，僅保留 tag，確認所有格式可還原；非法 tag（含整數上下界）被拒絕。
+- 本機 18 項單元／整合測試通過，0 失敗、無跳過。
+
 ## 0.3.1 Finder 選單修正
 
 - 根因：預覽版 codesign 步驟未傳入 entitlements，導致 Finder 擴充缺少 `com.apple.security.app-sandbox`。系統 pkd 記錄拒絕理由為「plug-ins must be sandboxed」，PlugInKit 中沒有註冊項目。

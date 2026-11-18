@@ -32,6 +32,14 @@ public enum FileCategory: String, CaseIterable, Sendable {
 public enum OutputFormat: String, CaseIterable, Codable, Sendable {
     case pdf, mp3, wav, m4a, flac, jpg, png, webp
     public var title: String { rawValue.uppercased() }
+
+    /// Finder reconstructs menu items across XPC. Integer tags survive; representedObject does not.
+    public var finderMenuTag: Int { Self.allCases.firstIndex(of: self)! + 1 }
+
+    public init?(finderMenuTag: Int) {
+        guard finderMenuTag > 0 && finderMenuTag <= Self.allCases.count else { return nil }
+        self = Self.allCases[finderMenuTag - 1]
+    }
 }
 
 public enum FormatPolicy {

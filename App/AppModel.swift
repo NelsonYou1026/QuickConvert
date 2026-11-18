@@ -69,8 +69,14 @@ final class AppModel: ObservableObject {
     }
 
     func receive(_ url: URL) {
-        do { enqueue(try ConversionRequest(url: url)) }
-        catch { status = error.localizedDescription }
+        do {
+            let request = try ConversionRequest(url: url)
+            NSLog("QuickConvert received %ld file(s) for %@", request.files.count, request.target.title)
+            enqueue(request)
+        } catch {
+            status = error.localizedDescription
+            NSLog("QuickConvert rejected conversion request: %@", error.localizedDescription)
+        }
     }
 
     func start() {

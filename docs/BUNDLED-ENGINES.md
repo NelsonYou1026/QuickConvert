@@ -25,6 +25,8 @@ QuickConvert.app/Contents/
 
 完整版本優先使用內附引擎，即使 PATH 或舊設定有其他 FFmpeg／cwebp。只在缺少內附引擎的開發版本退回系統工具。`.bundledOnly` 與 CLI 的 `--bundled-only` 完全關閉退回路徑，用於獨立運作驗證。
 
+Finder 選單跨 XPC 邊界後不依賴 representedObject：用整數 tag 指定格式，在 action callback 取得 Finder 的 selectedItemURLs，重新驗證並建立請求。擴充明確指定自身所在的 App 來開啟請求 URL，避免其他安裝／開發副本截走工作。主程式在 AppDelegate 接收 URL，不依賴 SwiftUI 視窗是否已存在；同一請求僅處理一次。
+
 轉檔仍經過 `ProcessRunner`。FFmpeg 停用網路編譯，僅啟用 file／pipe；程序沙盒禁止 IP 網路，允許 LibreOffice 所需的 Unix socket 本機 IPC。測試確認 loopback TCP 仍回傳 EPERM。無法建立隔離時不啟動引擎。
 
 ## 來源與快取

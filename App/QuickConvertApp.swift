@@ -9,7 +9,6 @@ struct QuickConvertApp: App {
     var body: some Scene {
         WindowGroup("QuickConvert") {
             ContentView(model: model)
-                .onOpenURL { url in model.receive(url) }
                 .task { await model.refreshDependencies() }
         }
         .defaultSize(width: 760, height: 580)
@@ -18,7 +17,13 @@ struct QuickConvertApp: App {
     }
 }
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// Process-level handling also receives Finder jobs on cold launch or with all windows closed.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls { AppModel.shared.receive(url) }
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if AppModel.shared.isRunning {
             AppModel.shared.status = "請先取消或等待目前的轉檔完成，再結束程式。"
