@@ -15,4 +15,4 @@ Tests copy it to a Chinese `.wav` filename to reproduce browser recordings whose
 
 ## Native scheduling probe
 
-`priority-probe.c` is a test-only C program compiled for the test process architecture. It records its own Darwin `getpriority` value without a shell or interpreter launching another child. This measures the process started by `ProcessRunner` directly and avoids launcher-dependent scheduling observations in CI. It is not bundled with the application.
+`priority-probe.c` is a test-only C program compiled for the test process architecture. It records its own Darwin `getpriority` value without a shell or interpreter launching another child. This measures the process started by `ProcessRunner` directly. The assertion compares against the parent's inherited nice value plus ten (clamped at the OS maximum), rather than assuming a zero-priority CI environment. It is not bundled with the application.

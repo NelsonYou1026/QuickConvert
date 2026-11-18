@@ -3,6 +3,7 @@ import AppKit
 import PDFKit
 import ImageIO
 import AVFoundation
+import Darwin
 @testable import QuickConvertCore
 
 final class CoreTests: XCTestCase {
@@ -157,6 +158,9 @@ final class CoreTests: XCTestCase {
 
     func testChildRunsWithReducedSchedulingPriority() throws {
         let output = folder.appendingPathComponent("nice.txt")
+        errno = 0
+        let inheritedPriority = getpriority(PRIO_PROCESS, 0)
+        XCTAssertEqual(errno, 0)
         // A native probe measures the direct child, without shell/interpreter launch wrappers.
         let fixture = try XCTUnwrap(Bundle.module.url(forResource: "priority-probe.c", withExtension: nil, subdirectory: "Fixtures"))
         let probe = folder.appendingPathComponent("priority-probe")
@@ -168,7 +172,8 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(compiler.terminationStatus, 0)
         try ProcessRunner().run(probe, arguments: [output.path], directory: folder)
         let nice = try XCTUnwrap(Int(try String(contentsOf: output).trimmingCharacters(in: .whitespacesAndNewlines)))
-        XCTAssertGreaterThanOrEqual(nice, 10)
+        let expected = min(Int(PRIO_MAX), Int(inheritedPriority) + 10)
+        XCTAssertGreaterThanOrEqual(nice, expected, "parent nice=\(inheritedPriority); nice adds 10 to the inherited value")
     }
 
     func testCancellationAfterChildStartsStopsItPromptly() throws {
