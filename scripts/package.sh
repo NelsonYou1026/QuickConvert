@@ -16,7 +16,10 @@ mkdir -p dist
 stage=$(mktemp -d "${TMPDIR:-/tmp}/quickconvert-dmg.XXXXXX")
 trap 'rm -rf "$stage"' EXIT
 ditto "$app" "$stage/QuickConvert.app"
-cp README.md LICENSE "$stage/"
+cp README.md README.zh-TW.md CONTRIBUTING.md LICENSE "$stage/"
+ditto docs "$stage/docs"
+mkdir -p "$stage/distribution"
+cp distribution/THIRD-PARTY-NOTICES.md "$stage/distribution/"
 ln -s /Applications "$stage/Applications"
 version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
 output="dist/QuickConvert-$version-$target_arch.dmg"

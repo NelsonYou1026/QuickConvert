@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="32" viewBox="0 0 100 32" role="img" aria-labelledby="title">
+  <title id="title">English</title>
+  <rect x="0.5" y="0.5" width="99" height="31" rx="7" fill="#172f3d" stroke="#377a8b"/>
+  <text x="50" y="21" fill="#f0fdfa" font-family="system-ui, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="600" text-anchor="middle">English</text>
+</svg>

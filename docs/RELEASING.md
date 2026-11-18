@@ -26,7 +26,7 @@ bash scripts/package.sh
 # 只打包一個架構：bash scripts/package.sh arm64
 ```
 
-每個產物含完整 App、Applications 捷徑、README 與 MIT License。App、Finder、FFmpeg、CLI 都是對應架構的 thin binary，只附一套 LibreOffice、第三方授權與 FFmpeg／LAME／libwebp 對應原始碼。使用者無須配置環境；開發建置需要 Python 3、make、pkg-config。未設定 DEVELOPMENT_TEAM 時只供本機預覽。細節見 [內附引擎](BUNDLED-ENGINES.md)。
+每個產物含完整 App、Applications 捷徑、英文與繁體中文 README、語言切換按鈕圖檔、貢獻與開發文件、第三方聲明及 MIT License。App、Finder、FFmpeg、CLI 都是對應架構的 thin binary，只附一套 LibreOffice、第三方授權與 FFmpeg／LAME／libwebp 對應原始碼。使用者無須配置環境；開發建置需要 Python 3、make、pkg-config。未設定 DEVELOPMENT_TEAM 時只供本機預覽。細節見 [內附引擎](BUNDLED-ENGINES.md)。
 
 ## 公開發布
 
