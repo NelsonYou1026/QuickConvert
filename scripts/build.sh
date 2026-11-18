@@ -33,7 +33,7 @@ fi
 if [[ -z "${DEVELOPMENT_TEAM:-}" ]]; then
   # Local preview only. App Groups and Finder activation require a real signing team.
   helper_identity="-"
-  codesign --force --sign - "$app/Contents/PlugIns/QuickConvertFinder.appex"
+  codesign --force --sign - --entitlements Configuration/Finder-Preview.entitlements "$app/Contents/PlugIns/QuickConvertFinder.appex"
 else
   helper_identity=$(codesign --display --verbose=4 "$app" 2>&1 | sed -n 's/^Authority=//p' | head -n 1)
   if [[ -z "$helper_identity" ]]; then

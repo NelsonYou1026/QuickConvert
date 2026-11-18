@@ -46,7 +46,7 @@ def configs(label, common):
 
 project_configs = configs("project", {"MACOSX_DEPLOYMENT_TARGET": "13.0", "SDKROOT": "macosx",
     "SWIFT_VERSION": "5.0", "CLANG_ENABLE_MODULES": "YES", "ARCHS": "$(ARCHS_STANDARD)",
-    "ONLY_ACTIVE_ARCH": "NO", "MARKETING_VERSION": "0.3.0", "CURRENT_PROJECT_VERSION": "3"})
+    "ONLY_ACTIVE_ARCH": "NO", "MARKETING_VERSION": "0.3.1", "CURRENT_PROJECT_VERSION": "4"})
 
 
 def target_settings(name, info, entitlement, bundle):

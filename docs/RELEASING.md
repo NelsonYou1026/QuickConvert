@@ -11,7 +11,9 @@
 DEVELOPMENT_TEAM=YOURTEAMID bash scripts/build.sh
 ```
 
-沒有團隊時 `bash scripts/build.sh` 建置本機架構 App 後進行 ad-hoc 簽章，只供本機主程式預覽。可用 QUICKCONVERT_ARCH=arm64 或 x86_64 指定架構。此模式不帶正式群組權限，也不能保證 Finder 擴充可啟用或共享設定。
+沒有團隊時 `bash scripts/build.sh` 建置本機架構 App 後進行 ad-hoc 簽章，可用 QUICKCONVERT_ARCH=arm64 或 x86_64 指定。Finder 擴充必須使用 `Configuration/Finder-Preview.entitlements` 保留 App Sandbox；不能只做不帶 entitlements 的 ad-hoc 簽章，否則 pkd 會以「plug-ins must be sandboxed」拒絕註冊。此模式可在本機啟用選單，但不帶正式 App Group 權限，跨程序自訂設定共享仍待正式簽章驗收。
+
+若選單未出現，先開啟 App，在「啟用 Finder 選單」的系統設定中勾選 QuickConvert Finder。開發診斷可用 `pluginkit -m -A -D -vv -i com.quickconvert.app.finder` 檢查註冊與啟用狀態。只有註冊失效時才重新註冊安裝於 Applications 的擴充，避免其他開發副本搶佔；不要清空整個 PlugInKit 資料庫或重設其他 App 的擴充設定。
 
 若 Xcode 出現 DVTDownloads／IDESimulatorFoundation 元件載入錯誤，可先執行 `xcodebuild -runFirstLaunch` 完成 Xcode 元件安裝，再重試。若仍失敗，需修復本機 Xcode；不應修改專案來掩蓋工具鏈問題。
 
@@ -19,8 +21,8 @@ DEVELOPMENT_TEAM=YOURTEAMID bash scripts/build.sh
 
 ```sh
 bash scripts/package.sh
-# dist/QuickConvert-0.3.0-arm64.dmg
-# dist/QuickConvert-0.3.0-x86_64.dmg
+# dist/QuickConvert-0.3.1-arm64.dmg
+# dist/QuickConvert-0.3.1-x86_64.dmg
 # 只打包一個架構：bash scripts/package.sh arm64
 ```
 
@@ -36,10 +38,10 @@ bash scripts/package.sh
 
    ```sh
    for arch in arm64 x86_64; do
-     xcrun notarytool submit "dist/QuickConvert-0.3.0-$arch.dmg" --keychain-profile YOUR_PROFILE --wait
-     xcrun stapler staple "dist/QuickConvert-0.3.0-$arch.dmg"
-     xcrun stapler validate "dist/QuickConvert-0.3.0-$arch.dmg"
-     spctl --assess --type open --context context:primary-signature --verbose "dist/QuickConvert-0.3.0-$arch.dmg"
+     xcrun notarytool submit "dist/QuickConvert-0.3.1-$arch.dmg" --keychain-profile YOUR_PROFILE --wait
+     xcrun stapler staple "dist/QuickConvert-0.3.1-$arch.dmg"
+     xcrun stapler validate "dist/QuickConvert-0.3.1-$arch.dmg"
+     spctl --assess --type open --context context:primary-signature --verbose "dist/QuickConvert-0.3.1-$arch.dmg"
    done
    ```
 
@@ -47,9 +49,9 @@ bash scripts/package.sh
 5. 用真實 release URL 與最終 DMG 產生 Cask：
 
    ```sh
-   python3 distribution/make_cask.py --version 0.3.0 \
-     --arm64-dmg dist/QuickConvert-0.3.0-arm64.dmg \
-     --x86_64-dmg dist/QuickConvert-0.3.0-x86_64.dmg \
+   python3 distribution/make_cask.py --version 0.3.1 \
+     --arm64-dmg dist/QuickConvert-0.3.1-arm64.dmg \
+     --x86_64-dmg dist/QuickConvert-0.3.1-x86_64.dmg \
      --repository https://github.com/SHENGHUNGYU/QuickConvert \
      --output dist/quickconvert.rb
    ```

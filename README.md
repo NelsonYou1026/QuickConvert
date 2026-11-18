@@ -2,12 +2,12 @@
 
 在 Finder 右鍵選單中轉換圖片、音訊與文件。SwiftUI 原生介面，macOS 13 以上，提供 Apple Silicon 與 Intel 獨立安裝包。所有轉檔都在本機完成。
 
-**0.3.0 分架構完整安裝包自帶轉檔引擎**：使用者無須 Homebrew、配置 PATH、安裝 FFmpeg、LibreOffice、Python 或 Rust。首次啟動不會下載引擎。公開 repo：[SHENGHUNGYU/QuickConvert](https://github.com/SHENGHUNGYU/QuickConvert)；正式公證 Release 尚未發布。
+**0.3.1 分架構完整安裝包自帶轉檔引擎**：使用者無須 Homebrew、配置 PATH、安裝 FFmpeg、LibreOffice、Python 或 Rust。首次啟動不會下載引擎。公開 repo：[SHENGHUNGYU/QuickConvert](https://github.com/SHENGHUNGYU/QuickConvert)；正式公證 Release 尚未發布。
 
 | 電腦 | 安裝包 |
 | --- | --- |
-| Apple Silicon（M 系列） | `QuickConvert-0.3.0-arm64.dmg` |
-| Intel Mac | `QuickConvert-0.3.0-x86_64.dmg` |
+| Apple Silicon（M 系列） | `QuickConvert-0.3.1-arm64.dmg` |
+| Intel Mac | `QuickConvert-0.3.1-x86_64.dmg` |
 
 每包只含對應架構的 App、Finder 擴充、CLI、FFmpeg 與一套 LibreOffice，避免下載另一個 CPU 的 runtime。
 
@@ -22,14 +22,14 @@ open "build/$(uname -m)/Build/Products/Release/QuickConvert.app"
 
 # 完整免配置安裝包：另需 Python 3、make、pkg-config 等開發工具
 bash scripts/package.sh
-# dist/QuickConvert-0.3.0-arm64.dmg
-# dist/QuickConvert-0.3.0-x86_64.dmg
+# dist/QuickConvert-0.3.1-arm64.dmg
+# dist/QuickConvert-0.3.1-x86_64.dmg
 # 也可只做其中一包：bash scripts/package.sh arm64
 ```
 
 也可直接開啟 `QuickConvert.xcodeproj`，選擇 QuickConvert scheme。`python3 scripts/generate_project.py` 可重建專案；新增來源檔案後請執行此指令。專案沒有第三方 Xcode 專案產生器依賴。
 
-**未設定簽章團隊時，build.sh 產生本機預覽版**：可使用主程式與 CLI，但 Finder 擴充的沙盒、App Group 與選單設定共享需要有效的同團隊簽章。請依 [開發與發布說明](docs/RELEASING.md) 設定。首次使用在程式內按「啟用 Finder 選單」，由使用者在系統設定勾選 QuickConvert Finder。不要以未簽章預覽版判定 Finder 整合驗收結果。
+**未設定簽章團隊時，build.sh 產生本機預覽版**：主程式與 CLI 可用；Finder 擴充保留必要的 App Sandbox entitlement，可在系統設定啟用選單。0.3.1 已修正舊版預覽簽章漏掉 entitlement、導致系統拒絕註冊的問題。App Group 跨程序自訂設定共享及正式分發仍需有效團隊簽章驗收。請依 [開發與發布說明](docs/RELEASING.md) 設定。
 
 主程式支援選取／拖放多個檔案、選擇目標格式、查看每個結果、取消與在 Finder 顯示輸出。Finder 入口會在背景喚起主程式，依序處理工作，不在 Finder 程序中執行轉檔。
 

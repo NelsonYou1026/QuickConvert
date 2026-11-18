@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import plistlib
 import re
 import subprocess
 from pathlib import Path
@@ -29,6 +30,14 @@ def verify(app, architecture=None):
     if declared not in ("arm64", "x86_64") or (architecture is not None and declared != architecture):
         raise RuntimeError(f"Runtime architecture mismatch: {declared} (expected {architecture})")
     architecture = declared
+    extension = app / "Contents/PlugIns/QuickConvertFinder.appex"
+    entitlements_data = subprocess.check_output(["codesign", "--display", "--entitlements", "-", "--xml", str(extension)], stderr=subprocess.PIPE)
+    try:
+        entitlements = plistlib.loads(entitlements_data)
+    except plistlib.InvalidFileException as error:
+        raise RuntimeError("Finder extension has no readable entitlements; macOS will refuse registration") from error
+    if entitlements.get("com.apple.security.app-sandbox") is not True:
+        raise RuntimeError("Finder extension lacks its required App Sandbox entitlement; macOS will refuse registration")
     for binary in (helpers / "ffmpeg", helpers / "quickconvert", app / "Contents/MacOS/QuickConvert",
                    app / "Contents/PlugIns/QuickConvertFinder.appex/Contents/MacOS/QuickConvertFinder"):
         if not binary.is_file() or not os.access(binary, os.X_OK):

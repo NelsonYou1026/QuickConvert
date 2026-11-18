@@ -2,6 +2,14 @@
 
 驗證日期：2026-11-18（Asia/Taipei）。此紀錄描述本次實際執行結果，不代表已完成公開發行或所有支援 OS 的實機驗收。
 
+## 0.3.1 Finder 選單修正
+
+- 根因：預覽版 codesign 步驟未傳入 entitlements，導致 Finder 擴充缺少 `com.apple.security.app-sandbox`。系統 pkd 記錄拒絕理由為「plug-ins must be sandboxed」，PlugInKit 中沒有註冊項目。
+- 修正：預覽版使用獨立的 Finder-Preview.entitlements，只要求必要的 App Sandbox；正式團隊仍使用原有 App Group 設定。打包驗證器讀取實際簽章內的 entitlement，缺少沙盒就失敗。
+- 防回歸：原本 0.3.0 的壞簽章包被新驗證器拒絕；修正簽章的完整 App 通過內附引擎／架構／動態依賴／簽章檢查。
+- 本機操作：先備份安裝的 App，修復簽章，再註冊並啟用該擴充。PlugInKit 顯示啟用，Finder 擴充程序成功執行；實際對 DOCX 右鍵確認出現「QuickConvert → 轉換為 PDF」。無須重啟 Finder或降低系統安全設定。
+- 此驗證只證明本機 ad-hoc 預覽版能註冊及顯示選單，正式分發公證、跨程序 App Group 自訂設定共享仍需另行驗收。
+
 ## 0.3.0 ARM／Intel 分包
 
 | 項目 | 結果 |
