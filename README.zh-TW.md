@@ -7,14 +7,14 @@
 
 在 Finder 右鍵選單中轉換圖片、音訊與文件。SwiftUI 原生介面，macOS 13 以上，提供 Apple Silicon 與 Intel 獨立安裝包。所有轉檔都在本機完成。
 
-**0.3.3 分架構完整安裝包自帶轉檔引擎**：使用者無須 Homebrew、配置 PATH、安裝 FFmpeg、LibreOffice、Python 或 Rust。首次啟動不會下載引擎。公開 repo：[SHENGHUNGYU/QuickConvert](https://github.com/SHENGHUNGYU/QuickConvert)；正式公證 Release 尚未發布。
+**0.3.4 分架構完整安裝包自帶轉檔引擎**：使用者無須 Homebrew、配置 PATH、安裝 FFmpeg、LibreOffice、Python 或 Rust。首次啟動不會下載引擎。公開 repo：[SHENGHUNGYU/QuickConvert](https://github.com/SHENGHUNGYU/QuickConvert)；正式公證 Release 尚未發布。
 
-0.3.3 的 Finder 轉檔不顯示視窗或 Dock 圖示；佇列完成約 2 秒後自動退出。手動開啟 App 才顯示主介面。已實測 Finder 右鍵 Word → PDF 與背景程序退出。
+0.3.4 的 Finder 轉檔不顯示視窗或 Dock 圖示；佇列完成約 2 秒後自動退出。手動開啟 App 才顯示主介面。已實測 Finder 右鍵 Word → PDF 與背景程序退出。
 
 | 電腦 | 安裝包 |
 | --- | --- |
-| Apple Silicon（M 系列） | `QuickConvert-0.3.3-arm64.dmg` |
-| Intel Mac | `QuickConvert-0.3.3-x86_64.dmg` |
+| Apple Silicon（M 系列） | `QuickConvert-0.3.4-arm64.dmg` |
+| Intel Mac | `QuickConvert-0.3.4-x86_64.dmg` |
 
 每包只含對應架構的 App、Finder 擴充、CLI、FFmpeg 與一套 LibreOffice，避免下載另一個 CPU 的 runtime。
 
@@ -29,8 +29,8 @@ open "build/$(uname -m)/Build/Products/Release/QuickConvert.app"
 
 # 完整免配置安裝包：另需 Python 3、make、pkg-config 等開發工具
 bash scripts/package.sh
-# dist/QuickConvert-0.3.3-arm64.dmg
-# dist/QuickConvert-0.3.3-x86_64.dmg
+# dist/QuickConvert-0.3.4-arm64.dmg
+# dist/QuickConvert-0.3.4-x86_64.dmg
 # 也可只做其中一包：bash scripts/package.sh arm64
 ```
 
@@ -54,6 +54,8 @@ bash scripts/package.sh
 | 文字 | UTF-8 txt、md | PDF | CoreText，原生分頁 |
 | 音訊 | mp3、wav、flac、m4a、aac、ogg | mp3、wav、m4a、flac | 內附 FFmpeg 9.0.2、LAME 3.100 |
 | 圖片 | png、jpg、jpeg、webp、heic、tiff、tif | jpg、png、webp、pdf | ImageIO／CoreGraphics；WebP 使用內附 libwebp 1.6.0 |
+
+0.3.4 補上瀏覽器錄音的 WebM／Opus 讀取支援；即使檔名為 `.wav`，也會由引擎依實際容器解析，不需手動改名。
 
 同一次最多 500 個檔案，必須屬於同一類別；可混選同類別的不同輸入格式。選單隱藏任何會讓部分檔案變成「相同格式」的目標。資料夾、符號連結與不支援的檔案會被拒絕。每個輸入各產生一個輸出，不會合併 PDF。
 

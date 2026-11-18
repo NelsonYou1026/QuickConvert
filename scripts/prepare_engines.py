@@ -128,7 +128,9 @@ def build_ffmpeg(archives, architectures):
                    "--disable-doc", "--disable-debug", "--disable-ffplay", "--disable-ffprobe", "--enable-ffmpeg",
                    "--enable-avcodec", "--enable-avformat", "--enable-avfilter", "--enable-swresample", "--enable-swscale",
                    "--enable-libmp3lame", "--enable-libwebp", "--enable-zlib", "--enable-protocol=file,pipe",
-                   "--enable-demuxer=mp3,wav,flac,mov,aac,ogg,image2,png_pipe",
+                   # Browser MediaRecorder exports may contain WebM/Opus despite a .wav filename.
+                   # Probe the container with Matroska enabled; no video decoder or networking is needed.
+                   "--enable-demuxer=mp3,wav,flac,mov,aac,ogg,matroska,image2,png_pipe",
                    "--enable-decoder=mp3,mp3float,flac,aac,vorbis,opus,alac,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,pcm_f64le,pcm_s16be,pcm_s24be,pcm_s32be,pcm_u8,png",
                    "--enable-parser=aac,mpegaudio,flac,vorbis,opus,png",
                    "--enable-encoder=libmp3lame,pcm_s16le,aac,flac,libwebp",

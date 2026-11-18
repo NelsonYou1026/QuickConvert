@@ -19,6 +19,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check child-process scheduling before preparing engines
+        run: swift test --filter testChildRunsWithReducedSchedulingPriority
       - name: Install developer build tools
         run: brew install pkgconf
       - uses: actions/cache@v4

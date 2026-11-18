@@ -123,6 +123,12 @@ def verify(app, architecture=None):
     for encoder in ("libmp3lame", "aac", "flac", "pcm_s16le", "libwebp"):
         if not re.search(r"\b" + encoder + r"\b", encoders):
             raise RuntimeError(f"Missing encoder: {encoder}")
+    demuxers = run([helpers / "ffmpeg", "-hide_banner", "-demuxers"], env=environment)
+    if not re.search(r"\bmatroska\b", demuxers):
+        raise RuntimeError("Missing WebM/Matroska demuxer for browser recordings with .wav filenames")
+    decoders = run([helpers / "ffmpeg", "-hide_banner", "-decoders"], env=environment)
+    if not re.search(r"\bopus\b", decoders):
+        raise RuntimeError("Missing Opus decoder for browser recordings")
     configuration = run([helpers / "ffmpeg", "-hide_banner", "-buildconf"], env=environment)
     if "--enable-gpl" in configuration or "--enable-nonfree" in configuration:
         raise RuntimeError("Unexpected GPL/nonfree FFmpeg build")

@@ -2,6 +2,7 @@ import XCTest
 import AppKit
 import PDFKit
 import ImageIO
+import AVFoundation
 @testable import QuickConvertCore
 
 final class CoreTests: XCTestCase {
@@ -156,8 +157,16 @@ final class CoreTests: XCTestCase {
 
     func testChildRunsWithReducedSchedulingPriority() throws {
         let output = folder.appendingPathComponent("nice.txt")
-        try ProcessRunner().run(URL(fileURLWithPath: "/bin/sh"),
-            arguments: ["-c", "/usr/bin/perl -e 'print getpriority(0, 0)' > nice.txt"], directory: folder)
+        // A native probe measures the direct child, without shell/interpreter launch wrappers.
+        let fixture = try XCTUnwrap(Bundle.module.url(forResource: "priority-probe.c", withExtension: nil, subdirectory: "Fixtures"))
+        let probe = folder.appendingPathComponent("priority-probe")
+        let compiler = Process()
+        compiler.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        compiler.arguments = ["clang", "-arch", Dependencies.processArchitecture, "-mmacosx-version-min=13.0", fixture.path, "-o", probe.path]
+        try compiler.run()
+        compiler.waitUntilExit()
+        XCTAssertEqual(compiler.terminationStatus, 0)
+        try ProcessRunner().run(probe, arguments: [output.path], directory: folder)
         let nice = try XCTUnwrap(Int(try String(contentsOf: output).trimmingCharacters(in: .whitespacesAndNewlines)))
         XCTAssertGreaterThanOrEqual(nice, 10)
     }
@@ -200,6 +209,23 @@ final class CoreTests: XCTestCase {
         let webp = try engine.convert(png, to: .webp)
         XCTAssertNotNil(CGImageSourceCreateWithURL(webp as CFURL, nil))
         _ = try engine.convert(webp, to: .png)
+    }
+
+    func testBrowserWebMRecordingWithWAVExtensionConvertsToMP3() throws {
+        let tools = integrationDependencies()
+        guard tools.ffmpeg != nil else { throw XCTSkip("FFmpeg not installed") }
+        // Synthetic one-second sine wave in a live WebM/Opus container, not a user's recording.
+        let fixture = try XCTUnwrap(Bundle.module.url(forResource: "browser-recording.webm", withExtension: nil, subdirectory: "Fixtures"))
+        let original = try Data(contentsOf: fixture)
+        let source = folder.appendingPathComponent("瀏覽器錄音.wav")
+        try original.write(to: source)
+        let output = try ConversionEngine(dependencies: tools).convert(source, to: .mp3)
+        let audio = try AVAudioFile(forReading: output)
+        let duration = Double(audio.length) / audio.processingFormat.sampleRate
+        XCTAssertGreaterThan(duration, 0.9)
+        XCTAssertLessThan(duration, 1.3)
+        XCTAssertEqual(try Data(contentsOf: source), original)
+        XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: folder.path).contains { $0.hasPrefix(".quickconvert-") })
     }
 
     func testBatchContinuesAfterFailureAndReportsProgress() async throws {

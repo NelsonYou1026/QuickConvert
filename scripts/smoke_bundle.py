@@ -52,6 +52,10 @@ def smoke(app, architecture=None):
             source = inputs / name
             shutil.copy2(ROOT / "Tests/QuickConvertCoreTests/Fixtures" / name, source)
             outputs.append(Path(convert("--to", "mp3", str(source))).name)
+        # Browser recordings can be WebM/Opus with a misleading .wav suffix.
+        browser = inputs / "瀏覽器錄音.wav"
+        shutil.copy2(ROOT / "Tests/QuickConvertCoreTests/Fixtures/browser-recording.webm", browser)
+        outputs.append(Path(convert("--to", "mp3", str(browser))).name)
         png = inputs / "透明圖片.png"
         def chunk(kind, data):
             return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))

@@ -13,7 +13,7 @@ Supports **macOS 13 Ventura and later**, with separate builds for **Apple Silico
 
 [Builds & CI](https://github.com/SHENGHUNGYU/QuickConvert/actions/workflows/ci.yml) · [Report a bug](https://github.com/SHENGHUNGYU/QuickConvert/issues) · [Contributing](#contributing) · [MIT License](LICENSE)
 
-> **Project status: early development, version 0.3.3.** There are no tagged GitHub Releases yet. Development DMGs are local previews; a Developer ID-signed, notarized release and a published Homebrew Cask are still pending. The app interface and supporting guides currently use Traditional Chinese. English localization contributions are welcome.
+> **Project status: early development, version 0.3.4.** There are no tagged GitHub Releases yet. Development DMGs are local previews; a Developer ID-signed, notarized release and a published Homebrew Cask are still pending. The app interface and supporting guides currently use Traditional Chinese. English localization contributions are welcome.
 
 ## Features
 
@@ -33,6 +33,8 @@ Supports **macOS 13 Ventura and later**, with separate builds for **Apple Silico
 | Audio | `.mp3`, `.wav`, `.flac`, `.m4a`, `.aac`, `.ogg` | `.mp3`, `.wav`, `.m4a`, `.flac` |
 | Images | `.png`, `.jpg`, `.jpeg`, `.webp`, `.heic`, `.tiff`, `.tif` | `.jpg`, `.png`, `.webp`, `.pdf` |
 
+Browser recordings with a `.wav` filename but WebM/Opus content are also supported: the engine detects the actual container before decoding.
+
 Each input produces a separate output. Batches must belong to one category, though input formats within that category may differ. Targets that would leave any selected file in its existing format are hidden. Folders and symbolic links are rejected.
 
 ## Installation
@@ -41,8 +43,8 @@ Until a signed release is available, build from source or download preview artif
 
 | Mac | Preview package |
 | --- | --- |
-| Apple Silicon, including M-series chips | `QuickConvert-0.3.3-arm64.dmg` |
-| Intel | `QuickConvert-0.3.3-x86_64.dmg` |
+| Apple Silicon, including M-series chips | `QuickConvert-0.3.4-arm64.dmg` |
+| Intel | `QuickConvert-0.3.4-x86_64.dmg` |
 
 1. Open the matching DMG and drag **QuickConvert.app** into **Applications**.
 2. Open QuickConvert and click **Enable Finder menu** (`啟用 Finder 選單`) to reach the macOS extension settings. Enable **QuickConvert Finder**.
