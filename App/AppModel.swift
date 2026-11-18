@@ -19,6 +19,7 @@ final class AppModel: ObservableObject {
     private var pending: [ConversionRequest] = []
     private var task: Task<Void, Never>?
     private var notificationAuthorization: Task<Bool, Never>?
+    var activityDidChange: (() -> Void)?
     let preferences = Preferences()
 
     var targets: [OutputFormat] {
@@ -76,6 +77,7 @@ final class AppModel: ObservableObject {
         } catch {
             status = error.localizedDescription
             NSLog("QuickConvert rejected conversion request: %@", error.localizedDescription)
+            notify("無法開始轉檔", body: status)
         }
     }
 
@@ -96,16 +98,22 @@ final class AppModel: ObservableObject {
     }
 
     private func runNext() {
-        guard !pending.isEmpty else { isRunning = false; task = nil; return }
+        guard !pending.isEmpty else {
+            isRunning = false
+            task = nil
+            activityDidChange?()
+            return
+        }
         let request = pending.removeFirst()
         isRunning = true
+        activityDidChange?()
         completed = 0
         total = request.files.count
         results = []
         files = request.files
         target = request.target
         status = "正在轉換為 \(request.target.title)…"
-        task = Task {
+        task = Task(priority: .utility) {
             // Tool discovery happens in the host, never inside Finder's menu callback.
             status = "正在偵測轉檔工具…"
             await refreshDependencies()
@@ -132,14 +140,11 @@ final class AppModel: ObservableObject {
     }
 
     private func notify(_ title: String, body: String) {
-        // Permission dialogs or an unavailable notification service must never block a conversion.
+        // Finder conversions never trigger a permission dialog or wait for the notification service.
         if notificationAuthorization == nil {
             notificationAuthorization = Task {
                 let center = UNUserNotificationCenter.current()
                 let settings = await center.notificationSettings()
-                if settings.authorizationStatus == .notDetermined {
-                    return (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
-                }
                 return settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
             }
         }
@@ -157,6 +162,14 @@ final class AppModel: ObservableObject {
             } catch {
                 notificationStatus = "系統通知未啟用；可在此視窗查看轉檔結果。"
             }
+        }
+    }
+
+    func requestNotificationAuthorization() {
+        notificationAuthorization = Task {
+            let allowed = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])) ?? false
+            notificationStatus = allowed ? "已啟用轉檔通知。" : "系統通知未啟用；請至系統設定允許 QuickConvert 通知。"
+            return allowed
         }
     }
 

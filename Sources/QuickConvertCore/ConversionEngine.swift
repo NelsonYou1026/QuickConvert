@@ -40,8 +40,9 @@ public struct ConversionEngine: Sendable {
             default: throw ConversionError.unsupported
             }
             try runner.run(ffmpeg, arguments: ["-nostdin", "-hide_banner", "-loglevel", "error", "-n",
+                                               "-filter_threads", "1", "-threads", "2",
                                                "-protocol_whitelist", "file,pipe", "-i", source.path,
-                                               "-map", "0:a:0", "-vn"] + codec + [output.path],
+                                               "-map", "0:a:0", "-vn"] + codec + ["-threads", "2", output.path],
                            directory: workspace, cancelled: cancelled)
         case .image:
             if target == .webp {
@@ -52,8 +53,9 @@ public struct ConversionEngine: Sendable {
                                    directory: workspace, cancelled: cancelled)
                 } else if let ffmpeg = dependencies.ffmpeg {
                     try runner.run(ffmpeg, arguments: ["-nostdin", "-hide_banner", "-loglevel", "error", "-n",
+                                                   "-filter_threads", "1", "-threads", "2",
                                                    "-protocol_whitelist", "file,pipe", "-i", normalized.path,
-                                                   "-frames:v", "1", "-c:v", "libwebp", "-quality", "90", output.path],
+                                                   "-frames:v", "1", "-c:v", "libwebp", "-quality", "90", "-threads", "2", output.path],
                                directory: workspace, cancelled: cancelled)
                 } else { throw ConversionError.missingTool("FFmpeg（含 libwebp）或 cwebp") }
             } else {

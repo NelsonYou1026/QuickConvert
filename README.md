@@ -2,14 +2,14 @@
 
 在 Finder 右鍵選單中轉換圖片、音訊與文件。SwiftUI 原生介面，macOS 13 以上，提供 Apple Silicon 與 Intel 獨立安裝包。所有轉檔都在本機完成。
 
-**0.3.2 分架構完整安裝包自帶轉檔引擎**：使用者無須 Homebrew、配置 PATH、安裝 FFmpeg、LibreOffice、Python 或 Rust。首次啟動不會下載引擎。公開 repo：[SHENGHUNGYU/QuickConvert](https://github.com/SHENGHUNGYU/QuickConvert)；正式公證 Release 尚未發布。
+**0.3.3 分架構完整安裝包自帶轉檔引擎**：使用者無須 Homebrew、配置 PATH、安裝 FFmpeg、LibreOffice、Python 或 Rust。首次啟動不會下載引擎。公開 repo：[SHENGHUNGYU/QuickConvert](https://github.com/SHENGHUNGYU/QuickConvert)；正式公證 Release 尚未發布。
 
-0.3.2 修正 Finder 選單點選後未送出工作的問題，已實測從 Finder 右鍵將文字與 Word 文件轉成可讀 PDF，包含 Downloads 的中文檔名。
+0.3.3 的 Finder 轉檔不顯示視窗或 Dock 圖示；佇列完成約 2 秒後自動退出。手動開啟 App 才顯示主介面。已實測 Finder 右鍵 Word → PDF 與背景程序退出。
 
 | 電腦 | 安裝包 |
 | --- | --- |
-| Apple Silicon（M 系列） | `QuickConvert-0.3.2-arm64.dmg` |
-| Intel Mac | `QuickConvert-0.3.2-x86_64.dmg` |
+| Apple Silicon（M 系列） | `QuickConvert-0.3.3-arm64.dmg` |
+| Intel Mac | `QuickConvert-0.3.3-x86_64.dmg` |
 
 每包只含對應架構的 App、Finder 擴充、CLI、FFmpeg 與一套 LibreOffice，避免下載另一個 CPU 的 runtime。
 
@@ -24,16 +24,20 @@ open "build/$(uname -m)/Build/Products/Release/QuickConvert.app"
 
 # 完整免配置安裝包：另需 Python 3、make、pkg-config 等開發工具
 bash scripts/package.sh
-# dist/QuickConvert-0.3.2-arm64.dmg
-# dist/QuickConvert-0.3.2-x86_64.dmg
+# dist/QuickConvert-0.3.3-arm64.dmg
+# dist/QuickConvert-0.3.3-x86_64.dmg
 # 也可只做其中一包：bash scripts/package.sh arm64
 ```
 
 也可直接開啟 `QuickConvert.xcodeproj`，選擇 QuickConvert scheme。`python3 scripts/generate_project.py` 可重建專案；新增來源檔案後請執行此指令。專案沒有第三方 Xcode 專案產生器依賴。
 
-**未設定簽章團隊時，build.sh 產生本機預覽版**：主程式與 CLI 可用；Finder 擴充保留必要的 App Sandbox entitlement，可在系統設定啟用選單。0.3.2 已修正舊版預覽簽章漏掉 entitlement、導致系統拒絕註冊的問題。App Group 跨程序自訂設定共享及正式分發仍需有效團隊簽章驗收。請依 [開發與發布說明](docs/RELEASING.md) 設定。
+**未設定簽章團隊時，build.sh 產生本機預覽版**：主程式與 CLI 可用；Finder 擴充保留必要的 App Sandbox entitlement，可在系統設定啟用選單。0.3.1 已修正舊版預覽簽章漏掉 entitlement、導致系統拒絕註冊的問題。App Group 跨程序自訂設定共享及正式分發仍需有效團隊簽章驗收。請依 [開發與發布說明](docs/RELEASING.md) 設定。
 
-主程式支援選取／拖放多個檔案、選擇目標格式、查看每個結果、取消與在 Finder 顯示輸出。Finder 入口會在背景喚起主程式，依序處理工作，不在 Finder 程序中執行轉檔。
+主程式支援選取／拖放多個檔案、選擇目標格式、查看每個結果、取消與在 Finder 顯示輸出。Finder 入口會在背景喚起主程式，依序處理工作，不在 Finder 程序中執行轉檔，也不會自動開視窗、搶前景或顯示 Dock 圖示。若 App 已由使用者手動開啟，既有視窗會保留。
+
+背景工作結束後約 2 秒自動退出；新工作抵達會取消退出。手動視窗關閉後，尚未完成的工作會在背景繼續，完成後退出。不安裝登入常駐服務、不定時掃描檔案。macOS 首次存取「下載項目／桌面／文件」等受保護位置仍可能要求系統授權，本機 ad-hoc 預覽版重新編譯／簽章後可能再次詢問；背景模式不會略過這些保護。通知權限只在設定中按「啟用系統通知」才詢問；Finder 轉檔只在已有權限時送出通知，通知服務不會阻擋轉檔，送達屬最佳努力。
+
+轉檔期間仍需要 CPU、記憶體與磁碟空間，無法零資源消耗。檔案逐一處理、Swift worker 使用 utility 優先序、外部引擎 nice +10；FFmpeg 輸入／輸出 codec 要求最多 2 個執行緒、filter 1 個（非整個程序的總執行緒或 CPU 百分比上限）。每個檔案完成會釋放 autorelease 物件。外部程序等待結束使用 semaphore，最多每秒檢查 4 次取消狀態。Finder 擴充由 macOS 管理，閒置時只保留選單事件處理，仍有少量記憶體使用。
 
 第一次建置單一架構會下載約 300 MB 官方來源／套件，編譯對應 C 引擎，並內嵌一套 Office runtime。建置另一架構時才下載另一套；後續使用 `build/`、`vendor/` 快取。這些是開發階段的下載，使用者執行 App 不需要下載。`QUICKCONVERT_ARCH=arm64` 或 `x86_64` 可指定 build.sh 的架構，未指定時使用本機架構。詳見 [內附引擎設計](docs/BUNDLED-ENGINES.md)。
 

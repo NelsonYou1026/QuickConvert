@@ -154,6 +154,27 @@ final class CoreTests: XCTestCase {
         }
     }
 
+    func testChildRunsWithReducedSchedulingPriority() throws {
+        let output = folder.appendingPathComponent("nice.txt")
+        try ProcessRunner().run(URL(fileURLWithPath: "/bin/sh"),
+            arguments: ["-c", "/usr/bin/perl -e 'print getpriority(0, 0)' > nice.txt"], directory: folder)
+        let nice = try XCTUnwrap(Int(try String(contentsOf: output).trimmingCharacters(in: .whitespacesAndNewlines)))
+        XCTAssertGreaterThanOrEqual(nice, 10)
+    }
+
+    func testCancellationAfterChildStartsStopsItPromptly() throws {
+        let marker = folder.appendingPathComponent("started")
+        let start = Date()
+        XCTAssertThrowsError(try ProcessRunner(timeout: 5).run(URL(fileURLWithPath: "/bin/sh"),
+            arguments: ["-c", "touch started; exec /bin/sleep 20"], directory: folder,
+            cancelled: { FileManager.default.fileExists(atPath: marker.path) })) { error in
+                XCTAssertEqual(error.localizedDescription, ConversionError.cancelled.localizedDescription)
+            }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: marker.path))
+        XCTAssertLessThan(Date().timeIntervalSince(start), 2)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), ["started"])
+    }
+
     func testFFmpegAudioMatrixAndWebPIntegration() throws {
         let tools = integrationDependencies()
         guard tools.ffmpeg != nil else { throw XCTSkip("FFmpeg not installed") }

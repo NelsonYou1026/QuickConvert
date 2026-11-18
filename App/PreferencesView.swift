@@ -48,7 +48,8 @@ struct PreferencesView: View {
             }
             Section("系統整合") {
                 Button("開啟 Finder 擴充功能設定", action: model.openExtensionSettings)
-                Text("首次使用請啟用 QuickConvert Finder。系統通知權限會在首次轉檔時詢問。")
+                Button("啟用系統通知", action: model.requestNotificationAuthorization)
+                Text("首次使用請啟用 QuickConvert Finder。Finder 轉檔在背景執行、不開視窗；如需完成提示，請在此啟用系統通知。")
                     .font(.caption).foregroundStyle(.secondary)
                 if !model.notificationStatus.isEmpty { Text(model.notificationStatus).font(.caption) }
             }

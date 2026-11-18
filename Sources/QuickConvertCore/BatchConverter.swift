@@ -19,9 +19,11 @@ public enum BatchConverter {
         var results: [FileConversionResult] = []
         for source in request.files {
             if Task.isCancelled { break }
-            let worker = Task.detached(priority: .userInitiated) {
+            let worker = Task.detached(priority: .utility) {
                 do {
-                    let output = try engine.convert(source, to: request.target, cancelled: { Task.isCancelled })
+                    let output = try autoreleasepool {
+                        try engine.convert(source, to: request.target, cancelled: { Task.isCancelled })
+                    }
                     return FileConversionResult(source: source, output: output, error: nil)
                 } catch {
                     return FileConversionResult(source: source, output: nil, error: error.localizedDescription)

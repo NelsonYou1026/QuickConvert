@@ -2,6 +2,19 @@
 
 驗證日期：2026-11-18（Asia/Taipei）。此紀錄描述本次實際執行結果，不代表已完成公開發行或所有支援 OS 的實機驗收。
 
+## 0.3.3 背景執行與資源回收
+
+- 以 LSUIElement 起始，移除自動建立 WindowGroup 的 App 生命週期；只有一般開啟／重新開啟 App 才建立 SwiftUI hosting window 並切換為一般 Dock App。Finder URL 請求直接進佇列，不建立視窗。
+- 佇列清空且無手動視窗時，單次可取消的 2 秒寬限後退出；新請求與手動開窗會取消退出。沒有登入常駐或定期閒置輪詢。背景轉檔不詢問通知授權；設定新增明確授權按鈕，通知以最佳努力送出。
+- worker utility 優先序、每次一檔、檔案之間清理 autorelease pool；外部程序 utility QoS 與 nice +10。FFmpeg codec threads=2、filter_threads=1，並非整體 CPU／記憶體硬上限。ProcessRunner 改用終止 semaphore，取消檢查最多 4 次／秒，仍保留 timeout、SIGTERM 寬限與 SIGKILL。
+- 實際在 Downloads 的獨立合成測試資料夾，從 Finder 右鍵轉換中文 DOCX；Finder 保持前景，未出現 QuickConvert 視窗，產生 2 頁可搜尋 QuickConvert 的 PDF。程序記錄確認完成通知送交服務後約 2 秒退出，主程式與 Office 子程序均消失。
+- 最終版本另從 Finder 同時選取暫存測試資料夾內的中文 DOCX 與 TXT，實際右鍵批次產生兩份 PDF；原地出現輸出且主程式自行退出，未顯示主視窗。手動開啟主介面、開啟及關閉 SwiftUI 設定 sheet、讀取內附引擎狀態，以及關閉主視窗後退出均可用。
+- 重新簽章後補測 Downloads 的原生 TXT 讀取，macOS 因 ad-hoc code requirement 改變再次要求 kTCCServiceSystemPolicyDownloadsFolder 授權，該次批次停在讀檔等待；已終止該合成測試工作，再以不需此授權的獨立暫存資料夾驗證上述批次。沒有修改 TCC、略過系統保護或替使用者授權。受保護位置首次存取可能仍需使用者回應系統授權，無法保證完全無系統提示。
+- ARM 原生與 Intel（Rosetta）核心測試各 20 項通過，新增真實子程序 nice 值與啟動後取消測試；兩架構搬移完整 App 後各通過 17 次離線轉換。
+- 此變更不宣稱轉檔零 CPU／記憶體使用。Finder 擴充由 macOS 管理，仍可能常駐少量記憶體；所有 OS／Intel 實機與正式簽章驗收仍見既有清單。
+
+API 依據：[Apple 背景 App activation policy](https://developer.apple.com/documentation/appkit/nsapplication/activationpolicy-swift.enum/accessory)、[Apple 預設啟動辨識](https://developer.apple.com/documentation/appkit/nsapplication/launchisdefaultuserinfokey)、[FFmpeg 執行緒設定](https://ffmpeg.org/ffmpeg.html)。Finder 擴充為 sandbox 程序，沒有使用會被系統忽略的 OpenConfiguration.arguments 判斷啟動模式。
+
 ## 0.3.2 Finder 點擊到產檔
 
 - 修正選單動作跨程序後讀不到 representedObject 而提前返回的派送方式：選單只傳整數格式 tag，在 Finder 保證有效的 action callback 重新取得 selectedItemURLs 並驗證請求。

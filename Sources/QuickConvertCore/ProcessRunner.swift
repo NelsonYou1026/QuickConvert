@@ -18,11 +18,14 @@ public struct ProcessRunner: Sendable {
         // LibreOffice requires local Unix sockets for its isolated-instance IPC. Internet/loopback IP
         // connections remain denied; allowing only Unix sockets does not allow TCP or UDP traffic.
         let profile = "(version 1)(allow default)(deny network*)(allow network* (local unix-socket) (remote unix-socket))"
-        process.arguments = ["-p", profile, executable.path] + arguments
+        process.qualityOfService = .utility
+        process.arguments = ["-p", profile, "/usr/bin/nice", "-n", "10", executable.path] + arguments
         process.currentDirectoryURL = directory
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = handle
         process.standardError = handle
+        let exited = DispatchSemaphore(value: 0)
+        process.terminationHandler = { _ in exited.signal() }
         try process.run()
         let deadline = Date().addingTimeInterval(timeout)
         var interruption: ConversionError?
@@ -31,12 +34,14 @@ public struct ProcessRunner: Sendable {
             else if Date() >= deadline { interruption = .timedOut }
             if interruption != nil {
                 process.terminate()
-                let grace = Date().addingTimeInterval(1)
-                while process.isRunning && Date() < grace { Thread.sleep(forTimeInterval: 0.02) }
-                if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+                if exited.wait(timeout: .now() + 1) == .timedOut, process.isRunning {
+                    kill(process.processIdentifier, SIGKILL)
+                }
                 break
             }
-            Thread.sleep(forTimeInterval: 0.025)
+            // Sleep in the kernel until exit; wake at most four times/second to check cancellation.
+            // Short timeouts still use their actual deadline.
+            if exited.wait(timeout: .now() + min(0.25, max(0, deadline.timeIntervalSinceNow))) == .success { break }
         }
         process.waitUntilExit()
         if let interruption { throw interruption }

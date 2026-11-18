@@ -246,9 +246,9 @@
 				<key>ONLY_ACTIVE_ARCH</key>
 				<string>NO</string>
 				<key>MARKETING_VERSION</key>
-				<string>0.3.2</string>
+				<string>0.3.3</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>5</string>
+				<string>6</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
 				<string>-Onone</string>
 				<key>DEBUG_INFORMATION_FORMAT</key>
@@ -278,9 +278,9 @@
 				<key>ONLY_ACTIVE_ARCH</key>
 				<string>NO</string>
 				<key>MARKETING_VERSION</key>
-				<string>0.3.2</string>
+				<string>0.3.3</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>5</string>
+				<string>6</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
 				<string>-O</string>
 				<key>DEBUG_INFORMATION_FORMAT</key>
