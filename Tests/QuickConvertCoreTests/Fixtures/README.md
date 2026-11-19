@@ -16,3 +16,7 @@ Tests copy it to a Chinese `.wav` filename to reproduce browser recordings whose
 ## Native scheduling probe
 
 `priority-probe.c` is a test-only C program compiled for the test process architecture. It records its own Darwin `getpriority` value without a shell or interpreter launching another child. This measures the process started by `ProcessRunner` directly. The assertion compares against the parent's inherited nice value plus ten (clamped at the OS maximum), rather than assuming a zero-priority CI environment. It is not bundled with the application.
+
+## Chinese document regression
+
+`chinese-document.docx` is a synthetic one-page document containing Traditional Chinese paragraphs, mixed Latin text, and a table. It requests the macOS Traditional Chinese Kai font name used by the reported failure. Tests assert the actual exported PDF text, not only its page count. It contains no user document content.

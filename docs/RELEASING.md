@@ -21,8 +21,8 @@ DEVELOPMENT_TEAM=YOURTEAMID bash scripts/build.sh
 
 ```sh
 bash scripts/package.sh
-# dist/QuickConvert-0.3.4-arm64.dmg
-# dist/QuickConvert-0.3.4-x86_64.dmg
+# dist/QuickConvert-0.3.5-arm64.dmg
+# dist/QuickConvert-0.3.5-x86_64.dmg
 # 只打包一個架構：bash scripts/package.sh arm64
 ```
 
@@ -38,10 +38,10 @@ bash scripts/package.sh
 
    ```sh
    for arch in arm64 x86_64; do
-     xcrun notarytool submit "dist/QuickConvert-0.3.4-$arch.dmg" --keychain-profile YOUR_PROFILE --wait
-     xcrun stapler staple "dist/QuickConvert-0.3.4-$arch.dmg"
-     xcrun stapler validate "dist/QuickConvert-0.3.4-$arch.dmg"
-     spctl --assess --type open --context context:primary-signature --verbose "dist/QuickConvert-0.3.4-$arch.dmg"
+     xcrun notarytool submit "dist/QuickConvert-0.3.5-$arch.dmg" --keychain-profile YOUR_PROFILE --wait
+     xcrun stapler staple "dist/QuickConvert-0.3.5-$arch.dmg"
+     xcrun stapler validate "dist/QuickConvert-0.3.5-$arch.dmg"
+     spctl --assess --type open --context context:primary-signature --verbose "dist/QuickConvert-0.3.5-$arch.dmg"
    done
    ```
 
@@ -49,9 +49,9 @@ bash scripts/package.sh
 5. 用真實 release URL 與最終 DMG 產生 Cask：
 
    ```sh
-   python3 distribution/make_cask.py --version 0.3.4 \
-     --arm64-dmg dist/QuickConvert-0.3.4-arm64.dmg \
-     --x86_64-dmg dist/QuickConvert-0.3.4-x86_64.dmg \
+   python3 distribution/make_cask.py --version 0.3.5 \
+     --arm64-dmg dist/QuickConvert-0.3.5-arm64.dmg \
+     --x86_64-dmg dist/QuickConvert-0.3.5-x86_64.dmg \
      --repository https://github.com/SHENGHUNGYU/QuickConvert \
      --output dist/quickconvert.rb
    ```

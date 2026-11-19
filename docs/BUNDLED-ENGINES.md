@@ -31,6 +31,12 @@ Finder 選單跨 XPC 邊界後不依賴 representedObject：用整數 tag 指定
 
 轉檔仍經過 `ProcessRunner`。FFmpeg 停用網路編譯，僅啟用 file／pipe；程序沙盒禁止 IP 網路，允許 LibreOffice 所需的 Unix socket 本機 IPC。測試確認 loopback TCP 仍回傳 EPERM。無法建立隔離時不啟動引擎。
 
+## macOS Office 字型
+
+無視窗 Office 後端使用 Fontconfig，預設可能只看見內附西文字型，讀不到 macOS asset 中的中文字型。`OfficeFontConfiguration` 透過 CoreText 列出本機可讀的字型檔案目錄，每個工作產生獨立的 fonts.conf，僅對該次 Office 子程序設定 FONTCONFIG_FILE；不修改 DOCX 指定字型、不變更系統 Fontconfig、不複製或下載字型。系統字型缺失時仍可能替代字型，不能保證所有 Word 版面完全相同。
+
+Fontconfig 掃描中繼資料放在使用者 Caches/QuickConvert/Fontconfig，避免每次重新掃描；快取目錄不可寫時改用工作目錄，完成後清理。快取不含文件內容，也不建立常駐字型程序。`ProcessRunner` 的環境覆寫僅作用於子程序，原有 IP 網路封鎖仍啟用。中文 DOCX／表格回歸測試會檢查 PDFKit 抽取的實際文字，避免只憑非空 PDF 與頁數判定成功。
+
 ## 來源與快取
 
 `distribution/engines.lock.json` 記錄 FFmpeg 9.0.2、LAME 3.100、libwebp 1.6.0、LibreOffice 26.8.3 的 URL／SHA-256。官方來源：

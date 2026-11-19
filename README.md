@@ -13,7 +13,7 @@ Supports **macOS 13 Ventura and later**, with separate builds for **Apple Silico
 
 [Builds & CI](https://github.com/SHENGHUNGYU/QuickConvert/actions/workflows/ci.yml) · [Report a bug](https://github.com/SHENGHUNGYU/QuickConvert/issues) · [Contributing](#contributing) · [MIT License](LICENSE)
 
-> **Project status: early development, version 0.3.4.** There are no tagged GitHub Releases yet. Development DMGs are local previews; a Developer ID-signed, notarized release and a published Homebrew Cask are still pending. The app interface and supporting guides currently use Traditional Chinese. English localization contributions are welcome.
+> **Project status: early development, version 0.3.5.** There are no tagged GitHub Releases yet. Development DMGs are local previews; a Developer ID-signed, notarized release and a published Homebrew Cask are still pending. The app interface and supporting guides currently use Traditional Chinese. English localization contributions are welcome.
 
 ## Features
 
@@ -43,8 +43,8 @@ Until a signed release is available, build from source or download preview artif
 
 | Mac | Preview package |
 | --- | --- |
-| Apple Silicon, including M-series chips | `QuickConvert-0.3.4-arm64.dmg` |
-| Intel | `QuickConvert-0.3.4-x86_64.dmg` |
+| Apple Silicon, including M-series chips | `QuickConvert-0.3.5-arm64.dmg` |
+| Intel | `QuickConvert-0.3.5-x86_64.dmg` |
 
 1. Open the matching DMG and drag **QuickConvert.app** into **Applications**.
 2. Open QuickConvert and click **Enable Finder menu** (`啟用 Finder 選單`) to reach the macOS extension settings. Enable **QuickConvert Finder**.
@@ -153,7 +153,7 @@ The [verification record](docs/VERIFICATION.md) distinguishes completed checks f
 
 ## Known limitations
 
-- Document layout depends on LibreOffice and the fonts installed on the Mac.
+- Office conversions load installed macOS fonts, including Chinese fonts in macOS font assets. A document that requires an unavailable font may still use a substitute and have layout differences. No fonts are downloaded by QuickConvert.
 - Markdown preserves text and basic inline formatting; it does not provide full web layout, remote images, or custom PDF styling. Text input must be UTF-8.
 - Multi-page TIFF and animated WebP inputs currently convert only the first page or frame. PDF outputs are not merged.
 - External conversions have a default ten-minute timeout per process. Cancellation preserves completed outputs.

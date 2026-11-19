@@ -7,6 +7,7 @@ public struct ProcessRunner: Sendable {
 
     /// File-backed diagnostics avoid pipe-buffer deadlocks. IP networking is denied in all child processes.
     public func run(_ executable: URL, arguments: [String], directory: URL,
+                    environment: [String: String] = [:],
                     cancelled: @Sendable () -> Bool = { false }) throws {
         if cancelled() { throw ConversionError.cancelled }
         let log = directory.appendingPathComponent(UUID().uuidString + ".log")
@@ -21,6 +22,7 @@ public struct ProcessRunner: Sendable {
         process.qualityOfService = .utility
         process.arguments = ["-p", profile, "/usr/bin/nice", "-n", "10", executable.path] + arguments
         process.currentDirectoryURL = directory
+        process.environment = ProcessInfo.processInfo.environment.merging(environment) { _, override in override }
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = handle
         process.standardError = handle

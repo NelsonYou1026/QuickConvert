@@ -76,6 +76,17 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 		</dict>
+		<key>7208C7C46C51B0E092FCB0D3</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>path</key>
+			<string>Sources/QuickConvertCore/OfficeFontConfiguration.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+		</dict>
 		<key>8F195AD76BA379438951E67B</key>
 		<dict>
 			<key>isa</key>
@@ -212,6 +223,7 @@
 				<string>5EDFBEB213755055E294CA1D</string>
 				<string>628657D635BF54509F20B4AA</string>
 				<string>58C9E76A7F5CDF6AB6E7992E</string>
+				<string>7208C7C46C51B0E092FCB0D3</string>
 				<string>8F195AD76BA379438951E67B</string>
 				<string>9958534B60E67E13CD20EC66</string>
 				<string>39A8CC9723057C02FCA8D837</string>
@@ -246,9 +258,9 @@
 				<key>ONLY_ACTIVE_ARCH</key>
 				<string>NO</string>
 				<key>MARKETING_VERSION</key>
-				<string>0.3.4</string>
+				<string>0.3.5</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>7</string>
+				<string>8</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
 				<string>-Onone</string>
 				<key>DEBUG_INFORMATION_FORMAT</key>
@@ -278,9 +290,9 @@
 				<key>ONLY_ACTIVE_ARCH</key>
 				<string>NO</string>
 				<key>MARKETING_VERSION</key>
-				<string>0.3.4</string>
+				<string>0.3.5</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>7</string>
+				<string>8</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
 				<string>-O</string>
 				<key>DEBUG_INFORMATION_FORMAT</key>
@@ -665,6 +677,13 @@
 			<key>fileRef</key>
 			<string>58C9E76A7F5CDF6AB6E7992E</string>
 		</dict>
+		<key>D7D744F1DAC7F2800877917B</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>7208C7C46C51B0E092FCB0D3</string>
+		</dict>
 		<key>719EFC9A0CBA3C66B3A013E5</key>
 		<dict>
 			<key>isa</key>
@@ -704,6 +723,7 @@
 				<string>67D5F764582FEBDA3A746456</string>
 				<string>555D0CBA60F79C15A7F1690A</string>
 				<string>1158CC29165EC7F7EB4B7AF7</string>
+				<string>D7D744F1DAC7F2800877917B</string>
 				<string>719EFC9A0CBA3C66B3A013E5</string>
 				<string>6EC35F6E0AE6B1262315B339</string>
 				<string>814F8A168E06EBF8DE6441B6</string>

@@ -88,10 +88,11 @@ public struct ConversionEngine: Sendable {
         </oor:items>
         """
         try registry.write(to: user.appendingPathComponent("registrymodifications.xcu"), atomically: true, encoding: .utf8)
+        let fontEnvironment = try OfficeFontConfiguration.prepare(in: workspace)
         try runner.run(office, arguments: ["-env:UserInstallation=\(profile.absoluteString)",
                                           "--headless", "--nologo", "--nodefault", "--nofirststartwizard",
                                           "--convert-to", "pdf", "--outdir", workspace.path, source.path],
-                       directory: workspace, cancelled: cancelled)
+                       directory: workspace, environment: fontEnvironment, cancelled: cancelled)
         let generated = workspace.appendingPathComponent(source.deletingPathExtension().lastPathComponent + ".pdf")
         guard FileManager.default.fileExists(atPath: generated.path) else { throw ConversionError.invalidOutput }
         if generated != output { try FileManager.default.moveItem(at: generated, to: output) }

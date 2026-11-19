@@ -259,6 +259,36 @@ final class CoreTests: XCTestCase {
         }
     }
 
+    func testOfficePDFPreservesChineseTextAndTableContents() throws {
+        let tools = integrationDependencies()
+        guard tools.libreOffice != nil else { throw XCTSkip("LibreOffice not installed") }
+        let fixture = try XCTUnwrap(Bundle.module.url(forResource: "chinese-document.docx", withExtension: nil, subdirectory: "Fixtures"))
+        let source = folder.appendingPathComponent("中文字型.docx")
+        try FileManager.default.copyItem(at: fixture, to: source)
+        let original = try Data(contentsOf: source)
+        let output = try ConversionEngine(dependencies: tools).convert(source, to: .pdf)
+        let pdf = try XCTUnwrap(PDFDocument(url: output))
+        XCTAssertEqual(pdf.pageCount, 1)
+        let text = try XCTUnwrap(pdf.string)
+        for expected in ["中文轉檔測試", "繁體中文必須完整保留", "標楷體與系統中文字型", "中文不得遺失", "English", "12345"] {
+            XCTAssertTrue(text.contains(expected), "Office export lost content: \(expected)")
+        }
+        XCTAssertFalse(text.contains("\u{fffd}"))
+        XCTAssertFalse(text.contains("\u{25a1}"))
+        XCTAssertEqual(try Data(contentsOf: source), original)
+    }
+
+    func testProcessEnvironmentOverrideDoesNotChangeTheHostEnvironment() throws {
+        let key = "QUICKCONVERT_TEST_ENV_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+        let output = folder.appendingPathComponent("environment.txt")
+        XCTAssertNil(ProcessInfo.processInfo.environment[key])
+        try ProcessRunner().run(URL(fileURLWithPath: "/bin/sh"),
+            arguments: ["-c", "printf '%s' \"$\(key)\" > environment.txt"], directory: folder,
+            environment: [key: "字型 & scoped override"])
+        XCTAssertEqual(try String(contentsOf: output), "字型 & scoped override")
+        XCTAssertNil(ProcessInfo.processInfo.environment[key])
+    }
+
     func testMenuConstructionPerformance() {
         let files = (0..<500).map { folder.appendingPathComponent("\($0).png") }
         let start = Date()

@@ -67,7 +67,7 @@ def smoke(app, architecture=None):
         text = inputs / "notes.md"
         text.write_text("# QuickConvert\n\nOffline PDF · 中文文字\n")
         outputs.append(Path(convert("--to", "pdf", str(text))).name)
-        for name in ("document.docx", "workbook.xlsx", "presentation.pptx", "page.html"):
+        for name in ("document.docx", "chinese-document.docx", "workbook.xlsx", "presentation.pptx", "page.html"):
             source = inputs / name
             shutil.copy2(ROOT / "Tests/QuickConvertCoreTests/Fixtures" / name, source)
             output = Path(convert("--to", "pdf", str(source)))
